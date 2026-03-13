@@ -1,14 +1,14 @@
 //
-//  MeetingPlannerApp.swift
-//  MeetingPlanner
+//  MonsterWalkerApp.swift
+//  MonsterWalker
 //
-//  Created by Brandon Hay on 2026-03-06.
+//  Created by Brandon Hay on 2026-03-13.
 //
 
 import SwiftUI
 
 @main
-struct MeetingPlannerApp: App {
+struct MonsterWalkerApp: App {
     var body: some Scene {
         WindowGroup {
             ContentView()
