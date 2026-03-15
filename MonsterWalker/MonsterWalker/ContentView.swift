@@ -8,9 +8,16 @@
 import SwiftUI
 
 struct ContentView: View {
+    
+    @StateObject var animator = ImageAnimator(
+            intervalSec: 1,
+            animMap: [AnimType.idle: ["Horse_Icon","Cat_Icon"]]
+        )
+    
     var body: some View {
+                 
         VStack {
-            Image(systemName: "globe")
+            Image(animator.currentName)
                 .imageScale(.large)
                 .foregroundStyle(.tint)
             Text("Hello, world!")
