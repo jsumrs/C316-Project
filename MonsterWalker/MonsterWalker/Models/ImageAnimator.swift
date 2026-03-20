@@ -8,31 +8,25 @@
 import Combine
 import UIKit
 
-enum AnimType : Hashable{
-    case idle
-    case sleep
-    case eat
-}
-
 /*
 Class used to switch between images for a simulated animation.
  
 To use:
     Create an instance as a field of the view struct you want:
  
-    animMap is a Map of the Animation type you want (defined in the above Enum) and the array of image names to animate through
+    animMap is a Map of the Animation types you want and the array of image names to animate through
  
-    Ensure idle is included in the AnimMap as that is the default value
+    Ensure your given startingName is a key in the animMap as that is the default value
  
     Then make an Image constructor within the view body
  
-
 e.g.
  -----------------------------------------------------------------
  
     @StateObject var animator = ImageAnimator(
          intervalSec: 1,
-         animMap: [AnimType.idle: ["Monster_Idle1","Monster_Idle2"]]
+         startingName: "idle",
+         animMap: ["idle": ["Monster_Idle1","Monster_Idle2"]]
      )
  
  
@@ -45,17 +39,18 @@ e.g.
 class ImageAnimator : ObservableObject {
     
     private var cycleTimer : AnyCancellable?
-    @Published var animationTypeMap : [AnimType : [String]]
-    let timerInterval : Double //Seconds
+    @Published var animationTypeMap : [String : [String]]
+    private let timerInterval : Double //Seconds
 
     private var currentindex : Int = 0
-    private var currentAnim : AnimType = AnimType.idle
+    private var currentAnim : String
     @Published var currentName : String
     
-    init(intervalSec : Double, animMap: [AnimType : [String]]) {
+    init(intervalSec : Double, startingName: String,  animMap: [String : [String]]) {
+        self.currentAnim = startingName
         self.timerInterval = intervalSec
         self.animationTypeMap = animMap
-        currentName = animMap[AnimType.idle]![0] //Needs to have an AnimType.idle in the Map
+        currentName = animMap[startingName]![0] //Needs to have an startingName in the Map
         cycleTimer = Timer.publish(every: timerInterval, on: .main, in: .common)
             .autoconnect()
             .sink { [unowned self] _ in
@@ -63,7 +58,7 @@ class ImageAnimator : ObservableObject {
             }
     }
     
-    func changeAnimation(_ type: AnimType) {
+    func changeAnimation(_ type: String) {
         currentAnim = type
         currentindex = 0
         startCycle()

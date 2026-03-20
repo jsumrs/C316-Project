@@ -8,61 +8,66 @@
 import Combine
 import Foundation
 import UIKit
-
+import SwiftData
+import SwiftUI
 
 /*
  Things left to Implment:
  - Loading/Saving
  - Streaks Multiplier
- - Detecting when App is in foreground vs Background
  
  */
 class MonsterModel : ObservableObject {
     
-    @Published var stepCount : Int64
-    
-    @Published var exp : Int64
-    @Published var expCap : Int64
-    @Published var expGainScalingFactor : Double
-    
-//    @Published var streakCount : Int
-//    private var lastActive = Date()
-    
-    @Published var level : Int
+    //Can be isolated into Level Class if needed
     
     @Published var happiness : Double
-    private var happinessTimer : AnyCancellable?
-
     @Published var energy : Double
+    @Published var ExperienceComponent : Experience? //NOT SURE IF OPTIONAL IS OK HERE
+    
+    private var energyReductionInterval : Double
+    private var lastEnergyReduction : Date
     private var energyTimer : AnyCancellable?
-        
+    
+    private var happinessReductionInterval : Double
+    private var lastHappinessReduction : Date
+    private var happinessTimer : AnyCancellable?
+    
+    
     init() {
         
-        //Will implement loading and saving functionality later
+        //LOAD DATE USING SWIFTDATA
         
-        //Using base values for now
-        exp = 0
-        expCap = 1000
-        expGainScalingFactor = 1.0
-        stepCount = 0
-        level = 0
+        //DEFAULT VALUES IF NO SAVE EXISTS YET
+
         happiness = 50
         energy = 100
+        lastHappinessReduction = Date()
+        lastEnergyReduction = Date()
+        energyReductionInterval = 600.0
+        happinessReductionInterval = 3600.0
+                
         
+        let happinessBinding = Binding(
+            get: { self.happiness },
+            set: { self.happiness = $0 }
+        )
+                
+        let energyBinding = Binding(
+            get: { self.energy },
+            set: { self.energy = $0 }
+        )
+
+        ExperienceComponent = Experience(
+            happiness: happinessBinding,
+            energy: energyBinding
+        )
         
-        //Load variables from UserDefaults or hardcoded default if not initialized
+        calculateTimePassed()
         
-        
-        happinessTimer = Timer.publish(every: 3600, on: .main, in: .common)
-            .autoconnect()
-            .sink { [unowned self] _ in
-                happinessTimerEvent()
-            }
-        energyTimer = Timer.publish(every: 600, on: .main, in: .common)
-            .autoconnect()
-            .sink { [unowned self] _ in
-                energyTimerEvent()
-            }
+        startTimers()
+
+
     }
     
     //Public functions
@@ -89,37 +94,40 @@ class MonsterModel : ObservableObject {
         
     }
     
-    
-    
-    
-    //Private functions
-    private func changeExpScalingFactor() { // Need to modify with streak
-        var baseScalingFactor : Double = 1.0
-        if (energy == 0) {
-            baseScalingFactor -= 0.25
+    //Initilization functions
+    private func calculateTimePassed() {
+                
+        // Subtract dates to get time interval in seconds
+        let happinessTimePassed = Date().timeIntervalSince(lastHappinessReduction)
+        let energyTimePassed = Date().timeIntervalSince(lastEnergyReduction)
+        
+        var happinessCounter = Int(happinessTimePassed / happinessReductionInterval)
+        while (happinessCounter > 0) {
+            happinessTimerEvent()
         }
-        if (happiness == 0) {
-            baseScalingFactor -= 0.25
-        }
-        expGainScalingFactor = baseScalingFactor
-    }
-    
-    private func levelUp(){
-        level += 1
-        var expCapScalingFactor : Double = 1.05
-        expCap = Int64(Double(expCap) * expCapScalingFactor)
-    }
-    
-    private func gainExperience() {
-        var newSteps = 0 //get new stepCount and add to stepCount
-        stepCount += Int64(newSteps)
-        exp += Int64(Double(newSteps) * expGainScalingFactor)
-        if (exp >= expCap) {
-            levelUp()
+        var energyCounter = Int(energyTimePassed / energyReductionInterval)
+        while (energyCounter > 0) {
+            energyTimerEvent()
         }
         
     }
     
+    private func startTimers() {
+        happinessTimer = Timer.publish(every: happinessReductionInterval, on: .main, in: .common)
+            .autoconnect()
+            .sink { [unowned self] _ in
+                happinessTimerEvent()
+            }
+        
+        energyTimer = Timer.publish(every: energyReductionInterval, on: .main, in: .common)
+            .autoconnect()
+            .sink { [unowned self] _ in
+                energyTimerEvent()
+            }
+
+    }
+    
+    //Private Monster Logic functions
     private func happinessTimerEvent() {
         let happinessDecrement = 20.0
         if happiness >= happinessDecrement {
@@ -144,7 +152,6 @@ class MonsterModel : ObservableObject {
             energy = temp
             return
         }
-        
         energy = 0
         
     }
@@ -153,6 +160,7 @@ class MonsterModel : ObservableObject {
 //        UserDefaults.standard.set(exp, forKey: "exp")
 //
 //    }
+    
     
     deinit {
         // This ensures timers stops before deallocation
