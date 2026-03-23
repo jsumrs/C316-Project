@@ -7,15 +7,15 @@
 
 import SwiftUI
 
-
-// Jason, this is just for you to see how to check for an error from the model or get the number of steps.
-// Tested on real hardware - it works. The simulator does not have HealthKit so we always get an error.
+// Step Counter Model demo.
 struct StepCounterView: View {
-    @StateObject private var stepCounterModel = StepCounterModel()
+    @StateObject private var stepCounter = StepCounterModel()
+    @State private var newSteps: Double = 0
     
     var body: some View {
         VStack {
-            if let error = stepCounterModel.error {
+            //Check Health Kit reported errors
+            if let error = stepCounter.error {
                 ContentUnavailableView {
                     Label("No Steps Data", systemImage: "figure.walk")
                 } description: {
@@ -26,19 +26,26 @@ struct StepCounterView: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(height: 100)
-                    .foregroundStyle(.red)
+                    .foregroundStyle(.green)
                 
-                Text(stepCounterModel.steps)
+                //Published total daily steps
+                Text("\(Int(stepCounter.dailySteps)) steps")
                     .font(.largeTitle)
             }
         }
         .padding()
         .task {
-            await stepCounterModel.requestAuth()
-            
-            //How to call the function
-            try? await stepCounterModel.getTodayTotalSteps()
+            //Get permission to use the Health Kit (shows on screen as request)
+            await stepCounter.requestAuth()
         }
+        Button("Steps since last call") {
+            Task {
+                newSteps = await stepCounter.getNumberOfNewSteps()
+            }
+        }.padding()
+        Text("\(Int(newSteps)) new steps")
+            .font(.headline)
+            .foregroundStyle(.secondary)
     }
 }
 
