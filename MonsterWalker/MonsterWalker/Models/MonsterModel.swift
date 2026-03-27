@@ -65,14 +65,14 @@ struct MonsterView: View {
 class MonsterModel {
 
     // MARK: - Persisted Properties
-    var happiness: Double
-    var energy: Double
+    public var happiness: Double
+    public var energy: Double
 
     var lastHappinessReduction: Date
     var lastEnergyReduction: Date
     var energyReductionInterval: Double
     var happinessReductionInterval: Double
-
+    
     // MARK: - Relationship
     @Relationship(deleteRule: .cascade) var experienceComponent: Experience
 
@@ -92,7 +92,8 @@ class MonsterModel {
     }
 
     // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
-    func start() {
+    @MainActor
+    func start() async{
         guard energyTimer == nil else { return }//if already started do nothing
         
         experienceComponent.happiness = happiness
@@ -101,7 +102,7 @@ class MonsterModel {
         calculateTimePassed()
         startTimers()
 
-        experienceComponent.start()
+        await experienceComponent.start()
     }
 
     // MARK: - Public Functions
@@ -166,7 +167,7 @@ class MonsterModel {
 
     private func energyTimerEvent() {
 
-        let stepsSinceLast = 20.0 //GET REAL STEPS FROM THE STEP COUNTER HERE
+        let stepsSinceLast = Double(experienceComponent.stepCount)
         let energyReductionScalingFactor = 0.01 //Every 100 steps energy goes down by 1
         energy = max(0, energy - (energyReductionScalingFactor * stepsSinceLast))
 

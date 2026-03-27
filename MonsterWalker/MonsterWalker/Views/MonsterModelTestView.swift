@@ -53,7 +53,9 @@ struct MonsterModelTestView: View {
                     }
                 }
                 .onAppear {
-                    monster.start()
+                    Task{
+                        await monster.start()
+                    }
                 }
             } else {
                 ProgressView() // Brief loading state

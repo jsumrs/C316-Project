@@ -38,8 +38,10 @@ final class StepCounterModel {
     }
     
     //Call this after SwiftData loads to reload the health kit
-    func activate() {
+    @MainActor
+    func start() {
         setupHealthStore()
+        startObservingStepCount()
     }
     
     private func setupHealthStore() {
