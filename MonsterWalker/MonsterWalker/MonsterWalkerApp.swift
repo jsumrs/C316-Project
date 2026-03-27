@@ -6,6 +6,7 @@
 //
 
 import SwiftUI
+import SwiftData
 
 @main
 struct MonsterWalkerApp: App {
@@ -13,5 +14,8 @@ struct MonsterWalkerApp: App {
         WindowGroup {
            StepCounterView()
         }
+        .modelContainer(for: [MonsterModel.self, Experience.self])
+        //When you set up your app with .modelContainer(for:),
+        //SwiftData automatically creates a modelContext and injects it into the environment for you:
     }
 }
