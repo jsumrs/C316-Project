@@ -9,7 +9,7 @@ import SwiftUI
 
 // Step Counter Model demo.
 struct StepCounterView: View {
-    @StateObject private var stepCounter = StepCounterModel()
+    @State private var stepCounter: StepCounterModel = StepCounterModel()
     @State private var newSteps: Double = 0
     
     var body: some View {
@@ -29,7 +29,7 @@ struct StepCounterView: View {
                     .foregroundStyle(.green)
                 
                 //Published total daily steps
-                Text("\(Int(stepCounter.dailySteps)) steps")
+                Text("\(Int(stepCounter.stepCount)) steps")
                     .font(.largeTitle)
             }
         }
