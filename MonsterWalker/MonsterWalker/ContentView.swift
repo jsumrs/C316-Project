@@ -11,7 +11,11 @@ struct ContentView: View {
 
     var body: some View {
                  
-            MonsterModelTestView()
+        VStack {
+            Text("Hello, world!")
+        }
+        .padding()
+
     }
 }
 

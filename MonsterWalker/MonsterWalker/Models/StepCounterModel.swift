@@ -21,42 +21,45 @@ final class StepCounterModel: ObservableObject {
     private var lastStepCount: Double = 0
     private var healthStore: HKHealthStore?
     private var observerQuery: HKObserverQuery?
+    private var lastGetNewStepsDate: Date = Calendar.current.startOfDay(for: Date.now)
     
     // Try and initialize the Health Store and set all the tracking variables
     init() {
         if HKHealthStore.isHealthDataAvailable() {
             healthStore = HKHealthStore()
+            lastGetNewStepsDate = Calendar.current.startOfDay(for: Date.now)
         } else {
             error = StepCounterError.couldNotFetchHealthStore
         }
     }
     
     //Helper to get steps from the Health Kit for any date range
-    private func getSteps(from startDate: Date, to endDate: Date) async -> Double {
-        guard let healthStore else { return 0 }
-        
-        do {
-            let sampleDateRange = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
-            let sample = HKSamplePredicate.quantitySample(type: HKQuantityType(.stepCount), predicate: sampleDateRange)
-            let stepsQuery = HKStatisticsQueryDescriptor(predicate: sample, options: .cumulativeSum)
-            let stepsData = try await stepsQuery.result(for: healthStore)
-            
-            return stepsData?.sumQuantity()?.doubleValue(for: .count()) ?? 0
-        } catch {
-            await MainActor.run {
-                self.error = error
-            }
-            return 0
+    private func getSteps(from startDate: Date, to endDate: Date) async throws -> Double {
+        guard let healthStore else { 
+            throw StepCounterError.couldNotFetchHealthStore
         }
+
+        let sampleDateRange = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
+        let sample = HKSamplePredicate.quantitySample(type: HKQuantityType(.stepCount), predicate: sampleDateRange)
+        let stepsQuery = HKStatisticsQueryDescriptor(predicate: sample, options: .cumulativeSum)
+        let stepsData = try await stepsQuery.result(for: healthStore)
+        
+        return stepsData?.sumQuantity()?.doubleValue(for: .count()) ?? 0
     }
     
     //Initialize the stored variables after getting permission
     private func initializeTodaysStepCounter() async {
-        let stepCount = await getTodaysSteps()
-    
-        await MainActor.run {
-            self.dailySteps = stepCount
-            self.lastStepCount = stepCount
+        do {
+            let stepCount = try await getTodaysSteps()
+        
+            await MainActor.run {
+                self.dailySteps = stepCount
+                self.lastStepCount = stepCount
+            }
+        } catch {
+            await MainActor.run {
+                self.error = error
+            }
         }
     }
     
@@ -99,9 +102,14 @@ final class StepCounterModel: ObservableObject {
             
             // Fetch the updated step count
             Task {
-                let updatedSteps = await self.getTodaysSteps()
-                await MainActor.run {
-                    self.dailySteps = updatedSteps
+                do {
+                    let updatedSteps = try await self.getTodaysSteps()
+                    await MainActor.run {
+                        self.dailySteps = updatedSteps
+                    }
+                } catch {
+                    // Don't update dailySteps — just leave the last known value. The observer querying the health kit while the phone is locked
+                    // will throw an error and crash, so its best to just catch and move on, and retry later.
                 }
                 completionHandler()
             }
@@ -133,23 +141,29 @@ final class StepCounterModel: ObservableObject {
     // Returns the number of steps taken since the last time this function was called
     @MainActor
     func getNumberOfNewSteps() async -> Double {
-        let currentStepCount = await getTodaysSteps()
-        let newSteps = currentStepCount - lastStepCount
-        
-        self.dailySteps = currentStepCount
-        self.lastStepCount = currentStepCount
-        
-        return newSteps
+        do {
+            let currentStepCount = try await getTodaysSteps()
+            let newSteps = try await getSteps(from: lastGetNewStepsDate, to: Date.now)
+            
+            self.dailySteps = currentStepCount
+            self.lastStepCount = currentStepCount
+            self.lastGetNewStepsDate = Date.now
+            
+            return newSteps
+        } catch {
+            self.error = error
+            return 0
+        }
     }
     
-    func getTodaysSteps() async -> Double {
+    func getTodaysSteps() async throws -> Double {
         let startOfToday = Calendar.current.startOfDay(for: Date())
-        return await getSteps(from: startOfToday, to: Date())
+        return try await getSteps(from: startOfToday, to: Date())
     }
     
-    func getYesterdaySteps() async -> Double {
+    func getYesterdaySteps() async throws -> Double {
         let yesterdaysStartDate = Calendar.current.startOfDay(for: Date() - 1)
         let yesterdaysEndDate = Calendar.current.startOfDay(for: Date())
-        return await getSteps(from: yesterdaysStartDate, to: yesterdaysEndDate)
+        return try await getSteps(from: yesterdaysStartDate, to: yesterdaysEndDate)
     }
 }
