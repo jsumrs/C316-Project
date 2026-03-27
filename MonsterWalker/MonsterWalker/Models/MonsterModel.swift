@@ -12,160 +12,170 @@ import SwiftData
 import SwiftUI
 
 /*
- Things left to Implment:
- - Loading/Saving
- - Streaks Multiplier
- 
- */
-class MonsterModel : ObservableObject {
-    
-    //Can be isolated into Level Class if needed
-    
-    @Published var happiness : Double
-    @Published var energy : Double
-    @Published var ExperienceComponent : Experience? //NOT SURE IF OPTIONAL IS OK HERE
-    
-    private var energyReductionInterval : Double
-    private var lastEnergyReduction : Date
-    private var energyTimer : AnyCancellable?
-    
-    private var happinessReductionInterval : Double
-    private var lastHappinessReduction : Date
-    private var happinessTimer : AnyCancellable?
-    
-    
-    init() {
-        
-        //LOAD DATE USING SWIFTDATA
-        
-        //DEFAULT VALUES IF NO SAVE EXISTS YET
+Interaction:
 
-        happiness = 50
-        energy = 100
+    The Monster model is almost entirely READ ONLY as it updates itself with timers.
+
+    It needs to be started using the start() function (example below) when the associated view is loaded
+
+    The ONLY ways you should be manipulating or writing to it are using the 2 public functions:
+        - feed(_ value: Double = 20)
+        - pet()
+
+Implementation Example:
+
+//Below is a basic example of how you should create the MonsterModel in the associated MonsterView
+
+struct MonsterView: View {
+    @Environment(\.modelContext) private var context
+    //calling environment variable so we can add a new
+    //monster to it if we don't have one saved already.
+    //Only needed when inserting.
+
+    @Query private var monsters: [MonsterModel]
+    //@Query returns an optional array of type: MonsterModel
+
+    //if MonsterModel exists load it, otherwise create one and save it
+    private var monster: MonsterModel {
+        if let existing = monsters.first {
+            return existing         // SwiftData rehydrated this from disk
+        }
+
+        let newMonster = MonsterModel(happiness: 50, energy: 100)
+        context.insert(newMonster)  // First launch — persist it
+        return newMonster
+    }
+
+    var body: some View {
+        GameView(monster: monster)
+            .onAppear {
+                monster.start()
+            }
+    }
+}
+*/
+
+/*
+ Improvements:
+ - calculateTimePassed() after a week of logout gets kinda slow. Change later only if needed
+*/
+
+
+@Model
+class MonsterModel {
+
+    // MARK: - Persisted Properties
+    var happiness: Double
+    var energy: Double
+
+    var lastHappinessReduction: Date
+    var lastEnergyReduction: Date
+    var energyReductionInterval: Double
+    var happinessReductionInterval: Double
+
+    // MARK: - Relationship
+    @Relationship(deleteRule: .cascade) var experienceComponent: Experience
+
+    // MARK: - Transient (runtime-only)
+    @Transient var energyTimer: AnyCancellable? = nil
+    @Transient var happinessTimer: AnyCancellable? = nil
+
+
+    init(happiness: Double, energy: Double) {
+        self.happiness = happiness
+        self.energy = energy
         lastHappinessReduction = Date()
         lastEnergyReduction = Date()
-        energyReductionInterval = 600.0
-        happinessReductionInterval = 3600.0
-                
-        
-        let happinessBinding = Binding(
-            get: { self.happiness },
-            set: { self.happiness = $0 }
-        )
-                
-        let energyBinding = Binding(
-            get: { self.energy },
-            set: { self.energy = $0 }
-        )
+        energyReductionInterval = 5.0
+        happinessReductionInterval = 7.0
+        experienceComponent = Experience(happiness: happiness, energy: energy)
+    }
 
-        ExperienceComponent = Experience(
-            happiness: happinessBinding,
-            energy: energyBinding
-        )
+    // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
+    func start() {
+        guard energyTimer == nil else { return }//if already started do nothing
+        
+        experienceComponent.happiness = happiness
+        experienceComponent.energy = energy
         
         calculateTimePassed()
-        
         startTimers()
 
-
+        experienceComponent.start()
     }
-    
-    //Public functions
+
+    // MARK: - Public Functions
+
     public func feed(_ value: Double = 20) {
         let maxEnergy = 100.0
-        if (energy + value <= maxEnergy){
-            energy += value
-            return
-        }
-        
-        energy = maxEnergy
-        
+        energy = min(energy + value, maxEnergy)
+        syncExperience()
     }
-    
-    public func pet(){
-        let value = 25.0
+
+    public func pet() {
         let maxHappiness = 100.0
-        if (happiness + value <= maxHappiness){
-            happiness += value
-            return
-        }
-        
-        happiness = maxHappiness
-        
+        happiness = min(happiness + 25.0, maxHappiness)
+        syncExperience()
     }
-    
-    //Initilization functions
+
+    // MARK: - Private Helpers
+
+    private func syncExperience() {
+        experienceComponent.happiness = happiness
+        experienceComponent.energy = energy
+        experienceComponent.changeExpScalingFactor()
+    }
+
     private func calculateTimePassed() {
-                
-        // Subtract dates to get time interval in seconds
         let happinessTimePassed = Date().timeIntervalSince(lastHappinessReduction)
         let energyTimePassed = Date().timeIntervalSince(lastEnergyReduction)
-        
+
         var happinessCounter = Int(happinessTimePassed / happinessReductionInterval)
-        while (happinessCounter > 0) {
+        while happinessCounter > 0 {
             happinessTimerEvent()
+            happinessCounter -= 1
         }
+
         var energyCounter = Int(energyTimePassed / energyReductionInterval)
-        while (energyCounter > 0) {
+        while energyCounter > 0 {
             energyTimerEvent()
+            energyCounter -= 1
         }
-        
     }
-    
-    private func startTimers() {
+
+    func startTimers() {
         happinessTimer = Timer.publish(every: happinessReductionInterval, on: .main, in: .common)
             .autoconnect()
             .sink { [unowned self] _ in
                 happinessTimerEvent()
             }
-        
+
         energyTimer = Timer.publish(every: energyReductionInterval, on: .main, in: .common)
             .autoconnect()
             .sink { [unowned self] _ in
                 energyTimerEvent()
             }
-
     }
-    
-    //Private Monster Logic functions
+
     private func happinessTimerEvent() {
-        let happinessDecrement = 20.0
-        if happiness >= happinessDecrement {
-            happiness -= 20.0
-        }
+        let happinessDecrement = 2.0
+        happiness = max(happiness - happinessDecrement, 0)
+        lastHappinessReduction = Date()
+        syncExperience()
     }
 
     private func energyTimerEvent() {
-        
-        //Base Energy
-        let energyDecrement = 1.0
-        if energy - energyDecrement >= 0 {
-            energy -= energyDecrement
-        }
-        
-        let stepsSinceLast = 0.0 //PLACEHOLDER call last steps function once implemented
-        let energyReductionScalingFactor = 0.01
-        
-        let temp = energy - (energyReductionScalingFactor * stepsSinceLast)
-        
-        if (temp >= 0){
-            energy = temp
-            return
-        }
-        energy = 0
-        
+
+        let stepsSinceLast = 20.0 //GET REAL STEPS FROM THE STEP COUNTER HERE
+        let energyReductionScalingFactor = 0.01 //Every 100 steps energy goes down by 1
+        energy = max(0, energy - (energyReductionScalingFactor * stepsSinceLast))
+
+        lastEnergyReduction = Date()
+        syncExperience()
     }
-    
-//    private func SaveData() {
-//        UserDefaults.standard.set(exp, forKey: "exp")
-//
-//    }
-    
-    
+
     deinit {
-        // This ensures timers stops before deallocation
         happinessTimer?.cancel()
         energyTimer?.cancel()
     }
-    
 }
