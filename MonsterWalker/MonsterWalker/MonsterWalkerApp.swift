@@ -12,7 +12,7 @@ import SwiftData
 struct MonsterWalkerApp: App {
     var body: some Scene {
         WindowGroup {
-           StepCounterView()
+           ContentView()
         }
         .modelContainer(for: [MonsterModel.self, Experience.self, StepCounterModel.self])
         //When you set up your app with .modelContainer(for:),
