@@ -30,30 +30,17 @@ struct MonsterModelTestView: View {
                     Text("Experience.level: " + String(m.experienceComponent.level))
                     Text("Experience.streak: " + String(m.experienceComponent.streak))
                     Text("Experience.evolutionIndex: " + String(m.experienceComponent.evolutionIndex))
-
-                    
-                    
                     Spacer()
                     HStack(spacing: 150) {
-                        Button("Feed",){
+                        Button("Feed") {
                             monsterModel?.feed()
                         }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                        
-                        Button("Pet"){
+                        Button("Pet") {
                             monsterModel?.pet()
                         }
-                        .padding()
-                        .background(Color.blue)
-                        .foregroundColor(.white)
-                        .cornerRadius(10)
-                    }
-                }
-                .onAppear {
-                    Task{
+                    } .buttonStyle(CustomButtonStyle())
+                } .onAppear {
+                    Task {
                         await monster.start()
                     }
                 }
@@ -70,9 +57,6 @@ struct MonsterModelTestView: View {
                 monsterModel = newMonster
             }
         }
-        
-        
-        
-        
     }
 }
+
