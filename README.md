@@ -1,12 +1,10 @@
 # C316-Project
-This project is a meeting planner built on iOS.
+This project is a motivational activity tracker with a monster friend built on iOS.
 
 # Scope
-Hook into iOS calendar and find a time slot that works for everyone to book a meeting in.
+This app hooks into the HealthKit to track the users steps and will level up and evolve their monster friend
 
 ## Use Case:
-1. Create meeting
-2. Select valid time range for meeting
-3. Select length of meeting
-4. Invite others via generated code (share via airdrop, QR code is a backup plan)
-5. Accept / Reject meeting
+1. Teach users how to look after a pet
+2. Motivate users to be active
+3. Make walking fun
