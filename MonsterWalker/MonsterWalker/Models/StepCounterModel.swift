@@ -13,6 +13,8 @@ final class StepCounterModel {
     
     var stepCount: Double
     var lastCalled: Date
+    var yesterdaysSteps: Double
+    var newSteps: Double
     
     // MARK: - Transient Properties
     
@@ -23,6 +25,8 @@ final class StepCounterModel {
     
     init(date: Date = .now, stepCount: Double = 0) {
         self.stepCount = stepCount
+        self.yesterdaysSteps = 0
+        self.newSteps = 0
         self.lastCalled = Calendar.current.startOfDay(for: .now)
         setupHealthStore()
     }
@@ -69,12 +73,31 @@ final class StepCounterModel {
     
     // MARK: - Timer-callable (sync interface, async internals)
     
-    func getTodaysSteps() {
+    func getTodaysSteps(completion: ((Double) -> Void)? = nil) {
         Task { @MainActor in
             do {
                 self.stepCount = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
+                
+                completion?(self.stepCount)
             } catch {
                 self.error = error
+                completion?(0)
+            }
+        }
+    }
+    
+    func getYesterdaysSteps(completion: ((Double) -> Void)? = nil) {
+        Task { @MainActor in
+            do {
+                self.yesterdaysSteps = try await getSteps(
+                    from: Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.startOfDay(for: .now))!,
+                    to: Calendar.current.startOfDay(for: .now)
+                )
+                
+                completion?(self.yesterdaysSteps)
+            } catch {
+                self.error = error
+                completion?(0)
             }
         }
     }
@@ -82,13 +105,15 @@ final class StepCounterModel {
     func getNewSteps(completion: ((Double) -> Void)? = nil) {
         Task { @MainActor in
             do {
-                let currentStepCount = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
+                let currentStepCount = try await getSteps(from: lastCalled, to: .now)
                 let newSteps = currentStepCount - self.stepCount
                 
                 self.stepCount = currentStepCount
                 self.lastCalled = .now
                 
                 completion?(newSteps)
+                
+                self.newSteps = newSteps
             } catch {
                 self.error = error
                 completion?(0)

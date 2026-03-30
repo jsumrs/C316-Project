@@ -41,7 +41,7 @@ struct DevControlView: View {
 
                 } .onAppear {
                     Task {
-                        await monster.start()
+                        monster.start()
                     }
                 }
             } else {

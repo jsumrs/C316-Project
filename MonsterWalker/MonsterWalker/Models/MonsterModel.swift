@@ -92,8 +92,7 @@ class MonsterModel {
     }
 
     // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
-    @MainActor
-    func start() async{
+    func start() {
         guard energyTimer == nil else { return }//if already started do nothing
         
         experienceComponent.happiness = happiness
@@ -102,7 +101,7 @@ class MonsterModel {
         calculateTimePassed()
         startTimers()
 
-        await experienceComponent.start()
+//        experienceComponent.start()
     }
 
     // MARK: - Public Functions
@@ -167,7 +166,7 @@ class MonsterModel {
 
     private func energyTimerEvent() {
 
-        let stepsSinceLast = Double(experienceComponent.stepCount)
+        let stepsSinceLast = Double(experienceComponent.newSteps)
         let energyReductionScalingFactor = 0.01 //Every 100 steps energy goes down by 1
         energy = max(0, energy - (energyReductionScalingFactor * stepsSinceLast))
 
