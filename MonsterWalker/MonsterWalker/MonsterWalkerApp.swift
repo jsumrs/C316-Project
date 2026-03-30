@@ -14,7 +14,7 @@ struct MonsterWalkerApp: App {
         WindowGroup {
            ContentView()
         }
-        .modelContainer(for: [MonsterModel.self, Experience.self, StepCounterModel.self])
+        .modelContainer(for: [MonsterModel.self])
         //When you set up your app with .modelContainer(for:),
         //SwiftData automatically creates a modelContext and injects it into the environment for you:
     }

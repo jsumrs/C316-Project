@@ -105,15 +105,13 @@ final class StepCounterModel {
     func getNewSteps(completion: ((Double) -> Void)? = nil) {
         Task { @MainActor in
             do {
-                let currentStepCount = try await getSteps(from: lastCalled, to: .now)
-                let newSteps = currentStepCount - self.stepCount
+                // Get the total steps from the start of the day
+                let currentTotalSteps = try await getSteps(from: self.lastCalled, to: .now)
                 
-                self.stepCount = currentStepCount
                 self.lastCalled = .now
+                self.newSteps = currentTotalSteps
                 
                 completion?(newSteps)
-                
-                self.newSteps = newSteps
             } catch {
                 self.error = error
                 completion?(0)
