@@ -30,7 +30,7 @@ struct MonsterModelTestView: View {
                     StatRowIntView(label: "streak", value: $m.experienceComponent.streak, step: 1)
                     StatRowIntView(label: "evolutionIndex", value: $m.experienceComponent.evolutionIndex, step: 1)
                     Spacer()
-                    HStack(spacing: 150) {
+                    HStack(alignment: .center) {
                         Button("Feed") {
                             monsterModel?.feed()
                         }
