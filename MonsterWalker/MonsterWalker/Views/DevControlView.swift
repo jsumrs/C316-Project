@@ -1,5 +1,5 @@
 //
-//  MonsterModelTestView.swift
+//  DevControlView.swift
 //  MonsterWalker
 //
 //  Created by Brandon Hay on 2026-03-20.
@@ -8,7 +8,7 @@
 import SwiftUI
 import SwiftData
 
-struct MonsterModelTestView: View {
+struct DevControlView: View {
 
     @Environment(\.modelContext) private var context
     @Query private var monsters: [MonsterModel]
@@ -123,5 +123,5 @@ struct StatRowInt64View: View {
 }
 
 #Preview {
-    MonsterModelTestView()
+    DevControlView()
 }
