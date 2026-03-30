@@ -8,7 +8,7 @@ struct CustomButtonStyle: ButtonStyle {
             .padding()
             .background(Theme.secondary)
             .foregroundStyle(Theme.primary)
-            .cornerRadius(10)
+            .cornerRadius(Theme.cornerRadius)
             .opacity(configuration.isPressed ? 0.8 : 1.0)
             .font(Theme.indieflower)
     }

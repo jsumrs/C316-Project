@@ -21,4 +21,7 @@ enum Theme {
     static let body = Font.system(size: 16, weight: .regular)
     static let caption = Font.system(size: 12, weight: .light)
     
+    // MARK: Geometry
+    static let cornerRadius: CGFloat = 8
+    
 }
