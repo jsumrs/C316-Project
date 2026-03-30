@@ -1,10 +1,3 @@
-//
-//  StepCounterModel.swift
-//  MonsterWalker
-//
-//  Created by James Midtdal on 2026-03-13.
-//
-
 import Foundation
 import HealthKit
 import SwiftData
@@ -12,8 +5,6 @@ import SwiftData
 enum StepCounterError: Error {
     case couldNotFetchHealthStore
 }
-
-// MARK: - SwiftData Model
 
 @Model
 final class StepCounterModel {
@@ -27,7 +18,6 @@ final class StepCounterModel {
     
     @Transient var error: Error?
     @Transient private var healthStore: HKHealthStore?
-    @Transient private var stepObserver: StepObserver?
    
     // MARK: - Init
     
@@ -35,13 +25,6 @@ final class StepCounterModel {
         self.stepCount = stepCount
         self.lastCalled = Calendar.current.startOfDay(for: .now)
         setupHealthStore()
-    }
-    
-    //Call this after SwiftData loads to reload the health kit
-    @MainActor
-    func start() {
-        setupHealthStore()
-        startObservingStepCount()
     }
     
     private func setupHealthStore() {
@@ -52,8 +35,7 @@ final class StepCounterModel {
         }
     }
     
-    // MARK: - Authorization
-    
+    // MARK: - Authorization (sole async entry point)
     @MainActor
     func requestAuth() async {
         guard let stepCountType = HKQuantityType.quantityType(forIdentifier: .stepCount),
@@ -61,19 +43,18 @@ final class StepCounterModel {
         
         do {
             try await healthStore.requestAuthorization(toShare: [], read: [stepCountType])
-            
-            let steps = try await getTodaysSteps()
+            let steps = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
             self.stepCount = steps
-            
-            startObservingStepCount()
         } catch {
             self.error = error
         }
     }
     
-    // MARK: - HealthKit Queries
+    // MARK: - HealthKit Query (private async helper)
     
+    @MainActor
     private func getSteps(from startDate: Date, to endDate: Date) async throws -> Double {
+        if healthStore == nil { setupHealthStore() }
         guard let healthStore else {
             throw StepCounterError.couldNotFetchHealthStore
         }
@@ -86,57 +67,32 @@ final class StepCounterModel {
         return stepsData?.sumQuantity()?.doubleValue(for: .count()) ?? 0
     }
     
-    func getTodaysSteps() async throws -> Double {
-        let startOfToday = Calendar.current.startOfDay(for: Date())
-        return try await getSteps(from: startOfToday, to: Date())
-    }
+    // MARK: - Timer-callable (sync interface, async internals)
     
-    func getYesterdaySteps() async throws -> Double {
-        let yesterdaysStartDate = Calendar.current.startOfDay(for: Date() - 1)
-        let yesterdaysEndDate = Calendar.current.startOfDay(for: Date())
-        return try await getSteps(from: yesterdaysStartDate, to: yesterdaysEndDate)
-    }
-    
-    // MARK: - Step Tracking
-    
-    @MainActor
-    func getNumberOfNewSteps() async -> Double {
-        do {
-            let currentStepCount = try await getTodaysSteps()
-            let newSteps = try await getSteps(from: lastCalled, to: .now)
-            
-            self.stepCount = currentStepCount
-            self.lastCalled = .now
-            
-            return newSteps
-        } catch {
-            self.error = error
-            return 0
+    func getTodaysSteps() {
+        Task { @MainActor in
+            do {
+                self.stepCount = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
+            } catch {
+                self.error = error
+            }
         }
     }
     
-    // MARK: - HealthKit Observer
-    
-    @MainActor
-    private func startObservingStepCount() {
-        guard let healthStore else { return }
-        
-        let observer = StepObserver(
-            healthStore: healthStore,
-            onUpdate: { [weak self] steps in
-                self?.stepCount = steps
-            },
-            onError: { [weak self] error in
-                self?.error = error
+    func getNewSteps(completion: ((Double) -> Void)? = nil) {
+        Task { @MainActor in
+            do {
+                let currentStepCount = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
+                let newSteps = currentStepCount - self.stepCount
+                
+                self.stepCount = currentStepCount
+                self.lastCalled = .now
+                
+                completion?(newSteps)
+            } catch {
+                self.error = error
+                completion?(0)
             }
-        )
-        
-        observer.start()
-        self.stepObserver = observer
-    }
-    
-    func stopObserving() {
-        stepObserver?.stop()
-        stepObserver = nil
+        }
     }
 }
