@@ -21,7 +21,7 @@ struct DevControlView: View {
                 @Bindable var m = monster
                 VStack(alignment: .leading) {
                     StatRowView(label: "Happiness", value: $m.happiness)
-                    StatRowView(label: "Energy", value: $m.energy)
+                    StatRowView(label: "Energy", value: $m.energy, step: 2)
                     StatRowView(label: "expGainScalingFactor", value: $m.experienceComponent.expGainScalingFactor, step: 0.1)
                     StatRowInt64View(label: "stepCount", value: $m.experienceComponent.stepCount, step: 100)
                     StatRowInt64View(label: "exp", value: $m.experienceComponent.exp, step: 100)
@@ -29,7 +29,7 @@ struct DevControlView: View {
                     StatRowIntView(label: "level", value: $m.experienceComponent.level, step: 1)
                     StatRowIntView(label: "streak", value: $m.experienceComponent.streak, step: 1)
                     StatRowIntView(label: "evolutionIndex", value: $m.experienceComponent.evolutionIndex, step: 1)
-                    Spacer()
+                    EnergyView(energy: m.energy)
                     HStack(alignment: .center) {
                         Button("Feed") {
                             monsterModel?.feed()
