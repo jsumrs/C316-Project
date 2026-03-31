@@ -11,10 +11,10 @@ final class StepCounterModel {
     
     // MARK: - Persisted Properties
     
-    var stepCount: Double
-    var lastCalled: Date
-    var yesterdaysSteps: Double
-    var newSteps: Double
+    var stepCount: Double = 0.0
+    var lastCalled: Date = Date.now
+    var yesterdaysSteps: Double = 0.0
+    var newSteps: Double = 0.0
     
     // MARK: - Transient Properties
     
@@ -23,11 +23,7 @@ final class StepCounterModel {
    
     // MARK: - Init
     
-    init(date: Date = .now, stepCount: Double = 0) {
-        self.stepCount = stepCount
-        self.yesterdaysSteps = 0
-        self.newSteps = 0
-        self.lastCalled = Calendar.current.startOfDay(for: .now)
+    init() {
         setupHealthStore()
     }
     
