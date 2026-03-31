@@ -69,7 +69,6 @@ class MonsterModel {
     public var energy: Double
 
     var lastHappinessReduction: Date
-    var lastEnergyReduction: Date
     var energyReductionInterval: Double
     var happinessReductionInterval: Double
     
@@ -85,24 +84,24 @@ class MonsterModel {
         self.happiness = happiness
         self.energy = energy
         lastHappinessReduction = Date()
-        lastEnergyReduction = Date()
         energyReductionInterval = 5.0
         happinessReductionInterval = 7.0
         experienceComponent = Experience(happiness: happiness, energy: energy)
     }
 
     // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
-    @MainActor
-    func start() async{
+    func start() {
         guard energyTimer == nil else { return }//if already started do nothing
         
         experienceComponent.happiness = happiness
         experienceComponent.energy = energy
         
         calculateTimePassed()
+        
+        
         startTimers()
 
-        await experienceComponent.start()
+        experienceComponent.start()
     }
 
     // MARK: - Public Functions
@@ -129,18 +128,11 @@ class MonsterModel {
 
     private func calculateTimePassed() {
         let happinessTimePassed = Date().timeIntervalSince(lastHappinessReduction)
-        let energyTimePassed = Date().timeIntervalSince(lastEnergyReduction)
 
         var happinessCounter = Int(happinessTimePassed / happinessReductionInterval)
         while happinessCounter > 0 {
             happinessTimerEvent()
             happinessCounter -= 1
-        }
-
-        var energyCounter = Int(energyTimePassed / energyReductionInterval)
-        while energyCounter > 0 {
-            energyTimerEvent()
-            energyCounter -= 1
         }
     }
 
@@ -166,12 +158,16 @@ class MonsterModel {
     }
 
     private func energyTimerEvent() {
-
-        let stepsSinceLast = Double(experienceComponent.stepCount)
+        var stepsSinceLast = 0.0
+        
+        if (experienceComponent.newStepsMonsterUsage == false){
+            stepsSinceLast = Double(experienceComponent.newSteps)
+        }
+        
+        experienceComponent.newStepsMonsterUsage = true
         let energyReductionScalingFactor = 0.01 //Every 100 steps energy goes down by 1
         energy = max(0, energy - (energyReductionScalingFactor * stepsSinceLast))
 
-        lastEnergyReduction = Date()
         syncExperience()
     }
 

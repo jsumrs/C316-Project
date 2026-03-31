@@ -40,9 +40,7 @@ struct DevControlView: View {
                     } .buttonStyle(CustomButtonStyle())
 
                 } .onAppear {
-                    Task {
-                        await monster.start()
-                    }
+                    monster.start()
                 }
             } else {
                 ProgressView() // Brief loading state
@@ -55,6 +53,13 @@ struct DevControlView: View {
                 let newMonster = MonsterModel(happiness: 50, energy: 100)
                 context.insert(newMonster)
                 monsterModel = newMonster
+                
+                // Explicitly save to ensure persistence
+                do {
+                    try context.save()
+                } catch {
+                    print("Failed to save new monster: \(error)")
+                }
             }
         }
     }

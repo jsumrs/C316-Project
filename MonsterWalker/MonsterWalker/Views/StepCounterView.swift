@@ -39,8 +39,8 @@ struct StepCounterView: View {
             await stepCounter.requestAuth()
         }
         Button("Steps since last call") {
-            Task {
-                newSteps = await stepCounter.getNumberOfNewSteps()
+            stepCounter.getNewSteps { steps in
+                self.newSteps = steps
             }
         }.padding()
         Text("\(Int(newSteps)) new steps")
