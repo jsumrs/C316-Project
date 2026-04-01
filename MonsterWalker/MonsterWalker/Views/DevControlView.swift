@@ -38,24 +38,7 @@ struct DevControlView: View {
     }
 }
 
-struct DevControlLoadedView: View {
-    @Bindable var monster: MonsterModel
-    
-    var body: some View {
-        VStack(alignment: .leading) {
-            DevStatControlView(monster: monster)
-            EnergyView(energy: monster.energy)
-            HStack {
-                Button("Feed") { monster.feed() }
-                Button("Pet") { monster.pet() }
-            }
-            .buttonStyle(CustomButtonStyle())
-        }
-        .onAppear {
-            monster.start()
-        }
-    }
-}
+
 
 
 
