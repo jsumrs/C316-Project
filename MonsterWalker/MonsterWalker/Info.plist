@@ -2,6 +2,12 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>MonsterWalker does not write any health data.</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>MonsterWalker uses your step counter to interact with monsters.</string>
+	<key>CFBundleIdentifier</key>
+	<string></string>
 	<key>UIAppFonts</key>
 	<array>
 		<string>IndieFlower-Regular.ttf</string>

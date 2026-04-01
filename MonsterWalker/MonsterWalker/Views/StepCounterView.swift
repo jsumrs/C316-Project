@@ -55,11 +55,6 @@ struct StepCounterView: View {
         Text("\(Int(newSteps)) new steps")
             .font(.headline)
             .foregroundStyle(.secondary)
-        
-        Button("Add 10 steps") {
-            stepCounter.addSteps()
-        }
-        
     }
 }
 

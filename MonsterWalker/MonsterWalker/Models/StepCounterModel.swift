@@ -118,8 +118,4 @@ final class StepCounterModel {
             }
         }
     }
-    
-    func addSteps(){
-        self.newSteps += 10
-    }
 }
