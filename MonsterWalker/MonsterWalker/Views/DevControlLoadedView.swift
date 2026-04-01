@@ -9,7 +9,6 @@ struct DevControlLoadedView: View {
     
     var body: some View {
         ZStack(alignment: .topLeading) {
-            // Your main UI
             VStack {
                 EnergyView(energy: monster.energy)
                 HStack {
@@ -19,9 +18,7 @@ struct DevControlLoadedView: View {
                 .buttonStyle(CustomButtonStyle())
             }
             
-            // Floating dev panel
             VStack(alignment: .leading, spacing: 0) {
-                // Header / toggle bar
                 HStack {
                     Text("Dev Controls")
                         .font(.caption)
