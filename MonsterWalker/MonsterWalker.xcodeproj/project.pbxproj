@@ -10,9 +10,22 @@
 		F11EAD712F648D2B0074094F /* MonsterWalker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MonsterWalker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		EEAEF5322F7DB86F007BF713 /* Exceptions for "MonsterWalker" folder in "MonsterWalker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F11EAD702F648D2B0074094F /* MonsterWalker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F11EAD732F648D2B0074094F /* MonsterWalker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				EEAEF5322F7DB86F007BF713 /* Exceptions for "MonsterWalker" folder in "MonsterWalker" target */,
+			);
 			path = MonsterWalker;
 			sourceTree = "<group>";
 		};

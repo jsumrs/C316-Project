@@ -6,10 +6,23 @@
 //
 
 import SwiftUI
+import SwiftData
 
 // Step Counter Model demo.
 struct StepCounterView: View {
-    @State private var stepCounter: StepCounterModel = StepCounterModel()
+    @Query private var stepCounters: [StepCounterModel]
+    @Environment(\.modelContext) private var modelContext
+    
+    private var stepCounter: StepCounterModel {
+        if let existing = stepCounters.first {
+            return existing
+        } else {
+            let newCounter = StepCounterModel()
+            modelContext.insert(newCounter)
+            return newCounter
+        }
+    }
+    
     @State private var newSteps: Double = 0
     
     var body: some View {
@@ -22,16 +35,12 @@ struct StepCounterView: View {
                     Text("Error: \(String(describing: error))")
                 }
             } else {
-                Image(systemName: "figure.walk")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(height: 100)
-                    .foregroundStyle(.green)
-                
                 //Published total daily steps
                 Text("\(Int(stepCounter.stepCount)) steps")
                     .font(.largeTitle)
             }
+            
+            Text("Last checked: \(stepCounter.lastCalled)")
         }
         .padding()
         .task {
@@ -42,10 +51,15 @@ struct StepCounterView: View {
             stepCounter.getNewSteps { steps in
                 self.newSteps = steps
             }
-        }.padding()
+        }
         Text("\(Int(newSteps)) new steps")
             .font(.headline)
             .foregroundStyle(.secondary)
+        
+        Button("Add 10 steps") {
+            stepCounter.addSteps()
+        }
+        
     }
 }
 
