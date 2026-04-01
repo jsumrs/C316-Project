@@ -17,7 +17,7 @@ struct MonsterWalkerApp: App {
     
     init() {
         do {
-            modelContainer = try ModelContainer(for: MonsterModel.self)
+            modelContainer = try ModelContainer(for: MonsterModel.self, Experience.self, StepCounterModel.self)
         } catch {
             fatalError("Failed to create ModelContainer: \(error)")
         }
