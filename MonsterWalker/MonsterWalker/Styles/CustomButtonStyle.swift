@@ -5,12 +5,18 @@ import SwiftUI
 struct CustomButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .padding()
-            .background(Theme.secondary)
-            .foregroundStyle(Theme.primary)
-            .cornerRadius(Theme.cornerRadius)
-            .opacity(configuration.isPressed ? 0.8 : 1.0)
             .font(Theme.indieflower)
+            .foregroundStyle(Theme.primary)
+            .padding(.horizontal, Theme.xl)
+            .padding(.vertical, Theme.md)
+            .background(Theme.secondary)
+            .opacity(configuration.isPressed ? 1.0 : 0.7)
+            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .overlay(
+                Image("SketchBorder")
+                    .resizable()
+            )
+            .rotationEffect(.degrees(Double.random(in: -2...2)))
     }
 }
 

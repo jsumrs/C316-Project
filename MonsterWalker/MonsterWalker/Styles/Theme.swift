@@ -16,7 +16,7 @@ enum Theme {
     static let xl: CGFloat = 32
 
     // MARK: Typography
-    static let indieflower = Font.custom("IndieFlower", size: 16)
+    static let indieflower = Font.custom("IndieFlower", size: 32)
     static let title = Font.system(size: 28, weight: .bold)
     static let body = Font.system(size: 16, weight: .regular)
     static let caption = Font.system(size: 12, weight: .light)

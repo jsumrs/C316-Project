@@ -1,0 +1,26 @@
+{
+  "images" : [
+    {
+      "filename" : "Frame 9.png",
+      "idiom" : "universal",
+      "resizing" : {
+        "cap-insets" : {
+          "bottom" : 37,
+          "left" : 17,
+          "right" : 282,
+          "top" : 36
+        },
+        "center" : {
+          "height" : 1,
+          "mode" : "stretch",
+          "width" : 1
+        },
+        "mode" : "9-part"
+      }
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}
