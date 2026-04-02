@@ -159,13 +159,14 @@ class MonsterModel {
 
     private func energyTimerEvent() {
         
-        experienceComponent.expGainTimerEvent()
-        
-        let energyReductionScalingFactor = 0.01
-        energy = max(0, energy - (energyReductionScalingFactor * experienceComponent.stepCounter.newSteps))
-        syncExperience()
-        
-        
+        experienceComponent.stepCounter.getNewSteps { steps in
+            let energyReductionScalingFactor = 0.01
+            self.energy = max(0, self.energy - (energyReductionScalingFactor * steps))
+            self.syncExperience()
+            
+            self.experienceComponent.expGainTimerEvent(steps)
+
+        }
     }
 
     deinit {

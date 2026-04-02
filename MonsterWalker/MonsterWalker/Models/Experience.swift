@@ -141,9 +141,8 @@ class Experience{
     }
 
 
-    func expGainTimerEvent() {
+    func expGainTimerEvent(_ steps: Double) {
         
-        stepCounter.getNewSteps { steps in
                 self.newSteps = Int(steps)
 
                 self.stepCount += Int64(steps)
@@ -151,17 +150,8 @@ class Experience{
                 while self.exp >= self.expCap {
                     self.levelUp()
                 }
-            }
+        
 
-//        let steps = 50
-//        
-//        stepCount += Int64(steps)
-//        newSteps = Int(steps)
-//        
-//        exp += Int64(Double(steps) * expGainScalingFactor)
-//        while exp >= expCap {
-//            levelUp()
-//        }
     }
     
 
