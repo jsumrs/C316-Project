@@ -37,7 +37,6 @@ class Experience{
     @Relationship(deleteRule: .cascade) var stepCounter: StepCounterModel
 
     // MARK: - Transient (runtime-only) Properties
-    @Transient var expGainTimer: AnyCancellable? = nil
     @Transient var streakTimer: Timer? = nil
 
 
@@ -63,13 +62,8 @@ class Experience{
     }
 
     func start(){
-        guard expGainTimer == nil else { return }//if already started do nothing
+        guard streakTimer == nil else { return }//if already started do nothing
 
-        expGainTimer = Timer.publish(every: 10.0, on: .main, in: .common)
-            .autoconnect()
-            .sink { [unowned self] _ in
-                    expGainTimerEvent()
-            }
         setupStreakTimer()
         
         checkStreakOnLaunch()
@@ -190,7 +184,5 @@ class Experience{
 
     deinit {
         streakTimer?.invalidate()
-        expGainTimer?.cancel()
-        expGainTimer = nil
     }
 }
