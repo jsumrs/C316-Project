@@ -39,7 +39,6 @@ class Experience{
     // MARK: - Transient (runtime-only) Properties
     @Transient var expGainTimer: AnyCancellable? = nil
     @Transient var streakTimer: Timer? = nil
-    @Transient var newStepsMonsterUsage = false
 
 
     @Transient var happiness: Double = 0.0
@@ -58,7 +57,6 @@ class Experience{
         evolutionLevels = [0, 20, 50, 70, 100]
         evolutionIndex = 0
         newSteps = 0
-        newStepsMonsterUsage = false
         self.happiness = happiness
         self.energy = energy
         stepCounter = StepCounterModel()
@@ -148,25 +146,31 @@ class Experience{
         }
     }
 
-    private func expGainTimerEvent () {
+
+    func expGainTimerEvent() {
         
-        if(newStepsMonsterUsage == false){
-            return
-        }
-        
-        stepCounter.getNewSteps{steps in
-            
-            self.stepCount += Int64(steps)
-            self.newSteps = Int(steps)
-            
-            self.newStepsMonsterUsage = false
-            self.exp += Int64(Double(steps) * self.expGainScalingFactor)
-            while self.exp >= self.expCap {
-                self.levelUp()
+        stepCounter.getNewSteps { steps in
+                self.newSteps = Int(steps)
+
+                self.stepCount += Int64(steps)
+                self.exp += Int64(Double(steps) * self.expGainScalingFactor)
+                while self.exp >= self.expCap {
+                    self.levelUp()
+                }
             }
-            
-        }
+
+//        let steps = 50
+//        
+//        stepCount += Int64(steps)
+//        newSteps = Int(steps)
+//        
+//        exp += Int64(Double(steps) * expGainScalingFactor)
+//        while exp >= expCap {
+//            levelUp()
+//        }
     }
+    
+
 
     private func streakTimerEvent() {        
         let tempDate = Date()

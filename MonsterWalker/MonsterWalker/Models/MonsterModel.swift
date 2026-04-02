@@ -84,7 +84,7 @@ class MonsterModel {
         self.happiness = happiness
         self.energy = energy
         lastHappinessReduction = Date()
-        energyReductionInterval = 5.0
+        energyReductionInterval = 10.0
         happinessReductionInterval = 7.0
         experienceComponent = Experience(happiness: happiness, energy: energy)
     }
@@ -158,17 +158,14 @@ class MonsterModel {
     }
 
     private func energyTimerEvent() {
-        var stepsSinceLast = 0.0
         
-        if (experienceComponent.newStepsMonsterUsage == false){
-            stepsSinceLast = Double(experienceComponent.newSteps)
-        }
+        experienceComponent.expGainTimerEvent()
         
-        experienceComponent.newStepsMonsterUsage = true
-        let energyReductionScalingFactor = 0.01 //Every 100 steps energy goes down by 1
-        energy = max(0, energy - (energyReductionScalingFactor * stepsSinceLast))
-
+        let energyReductionScalingFactor = 0.01
+        energy = max(0, energy - (energyReductionScalingFactor * experienceComponent.stepCounter.newSteps))
         syncExperience()
+        
+        
     }
 
     deinit {
