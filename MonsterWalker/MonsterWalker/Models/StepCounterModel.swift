@@ -25,7 +25,7 @@ final class StepCounterModel {
     
     init() {
         self.stepCount = 0.0
-        self.lastCalled = Date.now
+        self.lastCalled = Calendar.current.startOfDay(for: .now)
         self.yesterdaysSteps = 0.0
         self.newSteps = 0.0
         setupHealthStore()
@@ -34,13 +34,15 @@ final class StepCounterModel {
     private func setupHealthStore() {
         if HKHealthStore.isHealthDataAvailable() {
             healthStore = HKHealthStore()
+            Task{
+                await requestAuth()
+            }
         } else {
             error = StepCounterError.couldNotFetchHealthStore
         }
     }
     
     // MARK: - Authorization (sole async entry point)
-    @MainActor
     func requestAuth() async {
         guard let stepCountType = HKQuantityType.quantityType(forIdentifier: .stepCount),
               let healthStore else { return }
@@ -58,7 +60,10 @@ final class StepCounterModel {
     
     @MainActor
     private func getSteps(from startDate: Date, to endDate: Date) async throws -> Double {
-        if healthStore == nil { setupHealthStore() }
+        if healthStore == nil {
+            setupHealthStore()
+            await requestAuth()
+        }
         guard let healthStore else {
             throw StepCounterError.couldNotFetchHealthStore
         }

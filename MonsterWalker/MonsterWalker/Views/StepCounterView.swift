@@ -43,10 +43,6 @@ struct StepCounterView: View {
             Text("Last checked: \(stepCounter.lastCalled)")
         }
         .padding()
-        .task {
-            //Get permission to use the Health Kit (shows on screen as request)
-            await stepCounter.requestAuth()
-        }
         Button("Steps since last call") {
             stepCounter.getNewSteps { steps in
                 self.newSteps = steps
