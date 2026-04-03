@@ -27,24 +27,30 @@ struct EnergyView: View {
 
 struct MeatIcon: View {
     var fillAmount: Double
-    
+
     var body: some View {
-        GeometryReader { geo in
-            Image("MeatFill")
-                .resizable()
-                .scaledToFit()
-                .foregroundStyle(.red)
-                .frame(width: geo.size.width, height: geo.size.height)
-                .mask(alignment: .leading) {
-                    Rectangle()
-                        .frame(width: geo.size.width * fillAmount)
+        Image("MeatOutline")
+            .resizable()
+            .scaledToFit()
+            .hidden()
+            .overlay {
+                GeometryReader { geo in
+                    Image("MeatFill")
+                        .resizable()
+                        .scaledToFit()
+                        .foregroundStyle(.red)
+                        .frame(width: geo.size.width, height: geo.size.height)
+                        .mask(alignment: .leading) {
+                            Rectangle()
+                                .frame(width: geo.size.width * fillAmount)
+                        }
                 }
-        }.overlay(alignment: .leading) {
-            Image("MeatOutline")
-                .resizable()
-                .scaledToFit()
-        }
-        .rotationEffect(Angle(degrees: Double.random(in: -7...7)))
+                Image("MeatOutline")
+                    .resizable()
+                    .scaledToFit()
+            }
+
+            .rotationEffect(Angle(degrees: Double.random(in: -7...7)))
     }
 }
 
