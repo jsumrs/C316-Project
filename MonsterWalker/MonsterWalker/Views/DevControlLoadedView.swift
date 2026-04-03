@@ -61,8 +61,8 @@ struct DevControlLoadedView: View {
                     }
             )
         }
-        .onAppear {
-            monster.start()
+        .task {
+            await monster.start()
         }
     }
 }

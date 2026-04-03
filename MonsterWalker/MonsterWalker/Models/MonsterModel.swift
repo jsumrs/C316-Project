@@ -23,44 +23,45 @@ Interaction:
         - pet()
 
 Implementation Example:
+ 
+ //Below is a basic example of how you should create the MonsterModel in the associated MonsterView
 
-//Below is a basic example of how you should create the MonsterModel in the associated MonsterView
+ struct MonsterView: View {
+     @Environment(\.modelContext) private var context
+     //calling environment variable so we can add a new
+     //monster to it if we don't have one saved already.
+     //Only needed when inserting.
 
-struct MonsterView: View {
-    @Environment(\.modelContext) private var context
-    //calling environment variable so we can add a new
-    //monster to it if we don't have one saved already.
-    //Only needed when inserting.
+     @Query private var monsters: [MonsterModel]
+     //@Query returns an optional array of type: MonsterModel
 
-    @Query private var monsters: [MonsterModel]
-    //@Query returns an optional array of type: MonsterModel
+     //if MonsterModel exists load it, otherwise create one and save it
+     private var monster: MonsterModel {
+         if let existing = monsters.first {
+             return existing         // SwiftData rehydrated this from disk
+         }
 
-    //if MonsterModel exists load it, otherwise create one and save it
-    private var monster: MonsterModel {
-        if let existing = monsters.first {
-            return existing         // SwiftData rehydrated this from disk
-        }
+         let newMonster = MonsterModel(happiness: 50, energy: 100)
+         context.insert(newMonster)  // First launch — persist it
+         return newMonster
+     }
 
-        let newMonster = MonsterModel(happiness: 50, energy: 100)
-        context.insert(newMonster)  // First launch — persist it
-        return newMonster
-    }
+     var body: some View {
+         GameView(monster: monster)
+             .onAppear {
+                 monster.start()
+             }
+     }
+ }
+ */
 
-    var body: some View {
-        GameView(monster: monster)
-            .onAppear {
-                monster.start()
-            }
-    }
-}
-*/
-
-/*
- Improvements:
- - calculateTimePassed() after a week of logout gets kinda slow. Change later only if needed
-*/
+ /*
+  Improvements:
+  - calculateTimePassed() after a week of logout gets kinda slow. Change later only if needed
+ */
 
 
+@MainActor
 @Model
 class MonsterModel {
 
@@ -71,14 +72,13 @@ class MonsterModel {
     var lastHappinessReduction: Date
     var energyReductionInterval: Double
     var happinessReductionInterval: Double
-    
+
     // MARK: - Relationship
     @Relationship(deleteRule: .cascade) var experienceComponent: Experience
 
     // MARK: - Transient (runtime-only)
     @Transient var energyTimer: AnyCancellable? = nil
     @Transient var happinessTimer: AnyCancellable? = nil
-
 
     init(happiness: Double, energy: Double) {
         self.happiness = happiness
@@ -90,18 +90,14 @@ class MonsterModel {
     }
 
     // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
-    func start() {
-        guard energyTimer == nil else { return }//if already started do nothing
-        
+    func start() async {
+        guard energyTimer == nil else { return }
         experienceComponent.happiness = happiness
         experienceComponent.energy = energy
-        
-        calculateTimePassed()
-        
-        
-        startTimers()
 
-        experienceComponent.start()
+        await calculateTimePassed()
+        startTimers()
+        await experienceComponent.start()
     }
 
     // MARK: - Public Functions
@@ -126,9 +122,8 @@ class MonsterModel {
         experienceComponent.changeExpScalingFactor()
     }
 
-    private func calculateTimePassed() {
+    private func calculateTimePassed() async {
         let happinessTimePassed = Date().timeIntervalSince(lastHappinessReduction)
-
         var happinessCounter = Int(happinessTimePassed / happinessReductionInterval)
         while happinessCounter > 0 {
             happinessTimerEvent()
@@ -139,14 +134,18 @@ class MonsterModel {
     func startTimers() {
         happinessTimer = Timer.publish(every: happinessReductionInterval, on: .main, in: .common)
             .autoconnect()
-            .sink { [unowned self] _ in
-                happinessTimerEvent()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                self.happinessTimerEvent()
             }
 
         energyTimer = Timer.publish(every: energyReductionInterval, on: .main, in: .common)
             .autoconnect()
-            .sink { [unowned self] _ in
-                energyTimerEvent()
+            .sink { [weak self] _ in
+                guard let self else { return }
+                Task { @MainActor in
+                    await self.energyTimerEvent()
+                }
             }
     }
 
@@ -157,16 +156,14 @@ class MonsterModel {
         syncExperience()
     }
 
-    private func energyTimerEvent() {
+    private func energyTimerEvent() async {
+        let newSteps = await experienceComponent.stepCounter.getNewSteps()
+        let energyReductionScalingFactor = 0.01
         
-        experienceComponent.stepCounter.getNewSteps { steps in
-            let energyReductionScalingFactor = 0.01
-            self.energy = max(0, self.energy - (energyReductionScalingFactor * steps))
-            self.syncExperience()
-            
-            self.experienceComponent.expGainTimerEvent(steps)
+        energy = max(0, energy - (energyReductionScalingFactor * newSteps))
+        syncExperience()
 
-        }
+        experienceComponent.expGainTimerEvent(newSteps)
     }
 
     deinit {

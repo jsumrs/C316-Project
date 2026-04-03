@@ -3,124 +3,155 @@ import HealthKit
 import SwiftData
 
 enum StepCounterError: Error {
-    case couldNotFetchHealthStore
+    case healthDataNotAvailable
+    case healthStoreNotInitialized
 }
 
-@Model
-final class StepCounterModel {
+// MARK: Health Kit
+
+actor HealthKitService {
+    static let shared = HealthKitService()
     
-    // MARK: - Persisted Properties
-    
-    var stepCount: Double
-    var lastCalled: Date
-    var yesterdaysSteps: Double
-    var newSteps: Double
-    
-    // MARK: - Transient Properties
-    
-    @Transient var error: Error?
-    @Transient private var healthStore: HKHealthStore?
-   
-    // MARK: - Init
-    
-    init() {
-        self.stepCount = 0.0
-        self.lastCalled = Calendar.current.startOfDay(for: .now)
-        self.yesterdaysSteps = 0.0
-        self.newSteps = 0.0
-        setupHealthStore()
-    }
-    
-    private func setupHealthStore() {
+    private var healthStore: HKHealthStore?
+    private var isAuthorized = false
+
+    private init() {
         if HKHealthStore.isHealthDataAvailable() {
-            healthStore = HKHealthStore()
-            Task{
-                await requestAuth()
-            }
-        } else {
-            error = StepCounterError.couldNotFetchHealthStore
+            self.healthStore = HKHealthStore()
         }
     }
-    
-    // MARK: - Authorization (sole async entry point)
-    func requestAuth() async {
-        guard let stepCountType = HKQuantityType.quantityType(forIdentifier: .stepCount),
-              let healthStore else { return }
-        
+
+    var isAvailable: Bool { healthStore != nil }
+
+    func requestAuthorization() async throws {
+        guard !isAuthorized else { return }
+        guard let healthStore else {
+            throw StepCounterError.healthStoreNotInitialized
+        }
+        let stepCountType = HKQuantityType(.stepCount)
+        try await healthStore.requestAuthorization(toShare: [], read: [stepCountType])
+        isAuthorized = true
+    }
+
+    func fetchSteps(from startDate: Date, to endDate: Date) async throws -> Double {
+        guard let healthStore else {
+            throw StepCounterError.healthStoreNotInitialized
+        }
+        let predicate = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
+        let sample = HKSamplePredicate.quantitySample(
+            type: HKQuantityType(.stepCount),
+            predicate: predicate
+        )
+        let query = HKStatisticsQueryDescriptor(predicate: sample, options: .cumulativeSum)
+        let result = try await query.result(for: healthStore)
+        return result?.sumQuantity()?.doubleValue(for: .count()) ?? 0
+    }
+}
+
+// MARK: - StepCounterModel
+@MainActor
+@Model
+final class StepCounterModel {
+
+    // MARK: - Persisted Properties
+
+    var stepCount: Double
+    var previousTotal: Double
+    var lastTrackedDay: Date
+    var yesterdaysSteps: Double
+    var newSteps: Double
+
+    // MARK: - Transient Properties
+
+    @Transient var error: Error?
+
+    // MARK: - Init
+
+    init() {
+        self.stepCount = 0.0
+        self.previousTotal = 0.0
+        self.lastTrackedDay = Calendar.current.startOfDay(for: .now)
+        self.yesterdaysSteps = 0.0
+        self.newSteps = 0.0
+    }
+
+    func setup() async {
+        let service = HealthKitService.shared
+        guard await service.isAvailable else {
+            self.error = StepCounterError.healthDataNotAvailable
+            return
+        }
+
         do {
-            try await healthStore.requestAuthorization(toShare: [], read: [stepCountType])
-            let steps = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
-            self.stepCount = steps
+            try await service.requestAuthorization()
         } catch {
             self.error = error
         }
     }
-    
-    // MARK: - HealthKit Query (private async helper)
-    
-    @MainActor
-    private func getSteps(from startDate: Date, to endDate: Date) async throws -> Double {
-        if healthStore == nil {
-            setupHealthStore()
-            await requestAuth()
-        }
-        guard let healthStore else {
-            throw StepCounterError.couldNotFetchHealthStore
-        }
-        
-        let sampleDateRange = HKQuery.predicateForSamples(withStart: startDate, end: endDate)
-        let sample = HKSamplePredicate.quantitySample(type: HKQuantityType(.stepCount), predicate: sampleDateRange)
-        let stepsQuery = HKStatisticsQueryDescriptor(predicate: sample, options: .cumulativeSum)
-        let stepsData = try await stepsQuery.result(for: healthStore)
-        
-        return stepsData?.sumQuantity()?.doubleValue(for: .count()) ?? 0
-    }
-    
-    // MARK: - Timer-callable (sync interface, async internals)
-    
-    func getTodaysSteps(completion: ((Double) -> Void)? = nil) {
-        Task { @MainActor in
-            do {
-                self.stepCount = try await getSteps(from: Calendar.current.startOfDay(for: .now), to: .now)
-                
-                completion?(self.stepCount)
-            } catch {
-                self.error = error
-                completion?(0)
-            }
+
+    // MARK: - Public API
+
+    func getTodaysSteps() async -> Double {
+        do {
+            let service = HealthKitService.shared
+            let steps = try await service.fetchSteps(
+                from: Calendar.current.startOfDay(for: .now),
+                to: .now
+            )
+            self.stepCount = steps
+            return steps
+        } catch {
+            self.error = error
+            return 0
         }
     }
-    
-    func getYesterdaysSteps(completion: ((Double) -> Void)? = nil) {
-        Task { @MainActor in
-            do {
-                self.yesterdaysSteps = try await getSteps(
-                    from: Calendar.current.date(byAdding: .day, value: -1, to: Calendar.current.startOfDay(for: .now))!,
-                    to: Calendar.current.startOfDay(for: .now)
-                )
-                
-                completion?(self.yesterdaysSteps)
-            } catch {
-                self.error = error
-                completion?(0)
-            }
+
+    func getYesterdaysSteps() async -> Double {
+        do {
+            let service = HealthKitService.shared
+            let startOfToday = Calendar.current.startOfDay(for: .now)
+            let startOfYesterday = Calendar.current.date(
+                byAdding: .day, value: -1, to: startOfToday
+            )!
+            let steps = try await service.fetchSteps(
+                from: startOfYesterday,
+                to: startOfToday
+            )
+            self.yesterdaysSteps = steps
+            return steps
+        } catch {
+            self.error = error
+            return 0
         }
     }
-    
-    func getNewSteps(completion: ((Double) -> Void)? = nil) {
-        Task { @MainActor in
-            do {
-                // Get the total steps from the start of the day
-                let currentTotalSteps = try await getSteps(from: self.lastCalled, to: .now)
-                
-                self.lastCalled = .now
-                self.newSteps = currentTotalSteps
-                
-                completion?(newSteps)
-            } catch {
-                self.error = error
-                completion?(0)
+
+    func getNewSteps() async -> Double {
+        do {
+            let service = HealthKitService.shared
+            let startOfToday = Calendar.current.startOfDay(for: .now)
+
+            // Day rolled over — reset baseline
+            if startOfToday != lastTrackedDay {
+                previousTotal = 0
+                lastTrackedDay = startOfToday
             }
+
+            let currentTotal = try await service.fetchSteps(
+                from: startOfToday,
+                to: .now
+            )
+
+            let delta = max(currentTotal - previousTotal, 0)
+            if delta > 0 {
+                previousTotal = currentTotal
+            }
+
+            self.newSteps = delta
+            return delta
+        } catch {
+            print("[StepCounter] getNewSteps FAILED: \(error)")
+            self.error = error
+            return 0
         }
     }
 }

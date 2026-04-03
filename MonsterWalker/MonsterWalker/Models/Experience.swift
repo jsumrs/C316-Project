@@ -1,26 +1,12 @@
-//
-//  Experience.swift
-//  MonsterWalker
-//
-//  Created by Brandon Hay on 2026-03-16.
-//
-
 import Combine
 import Foundation
 import UIKit
 import SwiftData
 import SwiftUI
 
-/*
-Interaction:
-
-    The Experience model is entirely READ ONLY as it updates itself with timers and the StepCounter.
-
-    It needs to be started using the startTimers() function only if loaded from swiftData and not from init()
-
-*/
+@MainActor
 @Model
-class Experience{
+class Experience {
 
     // MARK: - Persisted Properties
     public var exp: Int64
@@ -38,14 +24,10 @@ class Experience{
 
     // MARK: - Transient (runtime-only) Properties
     @Transient var streakTimer: Timer? = nil
-
-
     @Transient var happiness: Double = 0.0
     @Transient var energy: Double = 0.0
-    
 
     init(happiness: Double = 0.0, energy: Double = 0.0) {
-
         lastStreakDate = Date()
         streak = 0
         exp = 0
@@ -61,73 +43,91 @@ class Experience{
         stepCounter = StepCounterModel()
     }
 
-    func start(){
-        guard streakTimer == nil else { return }//if already started do nothing
-
+    func start() async {
+        guard streakTimer == nil else { return }
+        await stepCounter.setup()
         setupStreakTimer()
-        
-        checkStreakOnLaunch()
-        
+        await checkStreakOnLaunch()
     }
-    
+
+    // MARK: - Streak Timer
+
     private func setupStreakTimer() {
         var components = DateComponents()
         components.hour = 23
         components.minute = 59
-        let targetTime = Calendar.current.nextDate(
+        guard let targetTime = Calendar.current.nextDate(
             after: Date(),
             matching: components,
             matchingPolicy: .nextTime
-        )!//WHY EXCLAMATION MARK
+        ) else { return }
 
         let t = Timer(fire: targetTime, interval: 0, repeats: false) { [weak self] _ in
-            self?.streakTimerEvent()
+            guard let self else { return }
+            Task { @MainActor in
+                await self.streakTimerEvent()
+            }
         }
         streakTimer = t
         RunLoop.main.add(t, forMode: .common)
     }
 
-    func checkStreakOnLaunch() {
+    // MARK: - Streak Logic
+
+    private func checkStreakOnLaunch() async {
         let calendar = Calendar.current
         let now = Date()
-        
+
         guard !calendar.isDateInToday(lastStreakDate) else { return }
-        
+
         if calendar.isDateInYesterday(lastStreakDate) {
-            
-            stepCounter.getNewSteps{ steps in
-                
-                if steps >= 5000 && self.energy > 0 {
-                    self.streak += 1
-                } else {
-                    self.streak = 0
-                }
+            let steps = await stepCounter.getYesterdaysSteps()
+            if steps >= 5000 && energy > 0 {
+                streak += 1
+            } else {
+                streak = 0
             }
-                
         } else {
-            // Missed more than one day
-            self.streak = 0
+            streak = 0
         }
-            
-            lastStreakDate = now
-            changeExpScalingFactor()
+
+        lastStreakDate = now
+        changeExpScalingFactor()
     }
-        
+
+    private func streakTimerEvent() async {
+        let tempDate = Date()
+
+        let todaysSteps = await stepCounter.getTodaysSteps()
+
+        if todaysSteps >= 5000 && energy > 0 {
+            streak += 1
+        } else {
+            streak = 0
+        }
+        lastStreakDate = tempDate
+        changeExpScalingFactor()
+        setupStreakTimer()
+    }
+
+    // MARK: - Experience Scaling
 
     func changeExpScalingFactor() {
         if energy <= 0 {
             streak = 0
         }
-        
+
         var baseScalingFactor: Double = 1.0
         baseScalingFactor += Double(streak) * 0.5
         baseScalingFactor = min(baseScalingFactor, 5.0)
-        
+
         if happiness == 0 {
             baseScalingFactor /= 2
         }
         expGainScalingFactor = baseScalingFactor
     }
+
+    // MARK: - Leveling
 
     private func levelUp() {
         level += 1
@@ -140,37 +140,14 @@ class Experience{
         }
     }
 
-
     func expGainTimerEvent(_ steps: Double) {
-        
-                self.newSteps = Int(steps)
-
-                self.stepCount += Int64(steps)
-                self.exp += Int64(Double(steps) * self.expGainScalingFactor)
-                while self.exp >= self.expCap {
-                    self.levelUp()
-                }
-        
-
-    }
-    
-
-
-    private func streakTimerEvent() {        
-        let tempDate = Date()
-    
-        stepCounter.getTodaysSteps{steps in
-            if steps >= 5000 && self.energy > 0 {
-                self.streak += 1
-            } else {
-                self.streak = 0
-            }
-            self.lastStreakDate = tempDate
-            self.changeExpScalingFactor()
-            self.setupStreakTimer()
+        newSteps = Int(steps)
+        stepCount += Int64(steps)
+        exp += Int64(Double(steps) * expGainScalingFactor)
+        while exp >= expCap {
+            levelUp()
         }
     }
-    
 
     deinit {
         streakTimer?.invalidate()
