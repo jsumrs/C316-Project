@@ -21,20 +21,7 @@ struct DevControlView: View {
                 ProgressView() // Loading state
             }
         }
-        .onAppear {
-            if let existing = monsters.first {
-                monsterModel = existing
-            } else {
-                let newMonster = MonsterModel(happiness: 50, energy: 100)
-                context.insert(newMonster)
-                monsterModel = newMonster
-                do {
-                    try context.save() // Explicit save to ensure persistence.
-                } catch {
-                    print("Failed to save new monster: \(error)")
-                }
-            }
-        }
+       
     }
 }
 
