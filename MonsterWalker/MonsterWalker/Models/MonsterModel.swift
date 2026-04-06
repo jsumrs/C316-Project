@@ -64,6 +64,9 @@ Implementation Example:
 @MainActor
 @Model
 class MonsterModel {
+    // MARK: - Globals
+    public static var maxHappiness: Double = 100
+    public static var maxEnergy: Double = 100
 
     // MARK: - Persisted Properties
     public var happiness: Double
@@ -103,14 +106,12 @@ class MonsterModel {
     // MARK: - Public Functions
 
     public func feed(_ value: Double = 20) {
-        let maxEnergy = 100.0
-        energy = min(energy + value, maxEnergy)
+        energy = min(energy + value, MonsterModel.maxEnergy)
         syncExperience()
     }
 
     public func pet() {
-        let maxHappiness = 100.0
-        happiness = min(happiness + 25.0, maxHappiness)
+        happiness = min(happiness + 25.0, MonsterModel.maxHappiness)
         syncExperience()
     }
 

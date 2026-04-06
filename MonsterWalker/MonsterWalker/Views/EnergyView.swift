@@ -1,12 +1,14 @@
 import SwiftUI
 
 struct EnergyView: View {
-    let meatSpacing: CGFloat = 4
-    let numOfMeats = 5
-    var energy: CGFloat = 20
-    var maxEnergy: CGFloat = 100
+    // View Specific
+    private let meatSpacing: CGFloat = 4
+    private let numOfMeats = 5
+    
+    // Data In
+  @Bindable var monster: MonsterModel
     var meatEnergyWorth: CGFloat {
-        maxEnergy / CGFloat(numOfMeats)
+      MonsterModel.maxEnergy / CGFloat(numOfMeats)
     }
     
     var body: some View {
@@ -21,7 +23,7 @@ struct EnergyView: View {
     
     func calcFillAmt(for meatIndex: Int) -> CGFloat {
         let raw = (
-            ( energy - (CGFloat(meatIndex) * meatEnergyWorth) ) / meatEnergyWorth
+          ( monster.energy - (CGFloat(meatIndex) * meatEnergyWorth) ) / meatEnergyWorth
         )
         return raw < 0 ? 0 : raw > 1 ? 1 : raw
     }
@@ -56,6 +58,3 @@ struct MeatIcon: View {
     }
 }
 
-#Preview {
-    EnergyView(energy: 60)
-}
