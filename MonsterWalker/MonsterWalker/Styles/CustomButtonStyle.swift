@@ -6,8 +6,8 @@ struct CustomButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
             .font(Theme.indieflower)
-            .foregroundStyle(Theme.primary)
-            .padding(.horizontal, Theme.xl)
+            .foregroundStyle(.black)
+            .padding(.horizontal, Theme.xl * 3)
             .padding(.vertical, Theme.md)
             .background(Theme.secondary)
             .opacity(configuration.isPressed ? 1.0 : 0.7)
@@ -16,7 +16,7 @@ struct CustomButtonStyle: ButtonStyle {
                 Image("SketchBorder")
                     .resizable()
             )
-            .rotationEffect(.degrees(Double.random(in: -2...2)))
+            .rotationEffect(.degrees(Double.random(in: 0 ... 2)))
     }
 }
 
