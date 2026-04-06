@@ -8,16 +8,6 @@ struct DevControlLoadedView: View {
     @State private var dragStart: CGSize = .zero
     
     var body: some View {
-        ZStack(alignment: .topLeading) {
-            VStack {
-                EnergyView(energy: monster.energy)
-                HStack {
-                    Button("Feed") { monster.feed() }
-                    Button("Pet") { monster.pet() }
-                }
-                .buttonStyle(CustomButtonStyle())
-            }
-            
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Text("Dev Controls")
@@ -31,7 +21,7 @@ struct DevControlLoadedView: View {
                 }
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
-                .background(.regularMaterial)
+                .background(.white)
                 .clipShape(RoundedRectangle(cornerRadius: isExpanded ? 10 : 10))
                 .onTapGesture {
                     withAnimation(.spring(duration: 0.3)) {
@@ -60,7 +50,7 @@ struct DevControlLoadedView: View {
                         dragStart = offset
                     }
             )
-        }
+        
         .task {
             await monster.start()
         }

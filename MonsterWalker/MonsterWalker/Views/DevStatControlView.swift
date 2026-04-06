@@ -99,7 +99,7 @@ struct StatRowLayout<Buttons: View>: View {
         }
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
-        .background(.regularMaterial)
+        .background(.white)
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 }

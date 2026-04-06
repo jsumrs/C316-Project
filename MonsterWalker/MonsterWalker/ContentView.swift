@@ -10,10 +10,15 @@ import SwiftUI
 struct ContentView: View {
 
     var body: some View {
-        DevControlView()
+      ZStack (alignment: .topLeading) {
+          DevControlView()
+              .zIndex(1)
+          MonsterView()
+      }
     }
 }
 
 #Preview {
     ContentView()
+        .background(Color.red.ignoresSafeArea())
 }
