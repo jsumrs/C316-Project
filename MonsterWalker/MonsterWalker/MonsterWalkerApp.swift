@@ -26,6 +26,7 @@ struct MonsterWalkerApp: App {
     var body: some Scene {
         WindowGroup {
            ContentView()
+                .background(Theme.background.ignoresSafeArea())
         }
         .modelContainer(modelContainer)
         .onChange(of: scenePhase) { oldPhase, newPhase in

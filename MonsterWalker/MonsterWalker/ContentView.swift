@@ -20,5 +20,5 @@ struct ContentView: View {
 
 #Preview {
     ContentView()
-        .background(Color.red.ignoresSafeArea())
+    .background(Theme.background.ignoresSafeArea())
 }
