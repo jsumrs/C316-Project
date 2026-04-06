@@ -10,11 +10,13 @@ import SwiftUI
 struct ContentView: View {
 
     var body: some View {
-      ZStack (alignment: .topLeading) {
-          DevControlView()
-              .zIndex(1)
-          MonsterView()
-      }
+      MonsterView()
+//      ZStack (alignment: .topLeading) {
+//        
+//          DevControlView()
+//              .zIndex(1)
+//          MonsterView()
+//      }
     }
 }
 

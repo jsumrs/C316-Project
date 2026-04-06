@@ -5,22 +5,56 @@ struct MonsterView: View {
   @Environment(\.modelContext) private var context
   @Query private var monsters: [MonsterModel]
   @State private var monsterModel: MonsterModel? = nil
+  @State private var showStats = false
 
   var body: some View {
-    VStack {
+    Group {
+      if let monster = monsterModel {
+        VStack {
+          InfoPlate(monster)
+          Image("Monster")
+            .padding(Theme.xl)
+            .onTapGesture {
+              monster.pet()
+            }
 
-      InfoPlate()
-      Image("Monster")
-        .padding(Theme.xl)
-
-      EnergyView()
-      Button("Feed") { print("Fed trogdor") }
+          EnergyView(monster: monster)
+          Button("Feed") {
+            monster.feed()
+          }
+          .buttonStyle(CustomButtonStyle())
+          Button("Stats") { showStats = true }
+            .font(Theme.caption)
+            .foregroundStyle(Theme.textSecondary)
+            .padding()
+        }
+        .backgroundStyle(Theme.background)
+        .sheet(isPresented: $showStats) {
+          StatView(monster: monster)
+            .presentationDetents([.medium])
+            .presentationDragIndicator(.visible)
+        }
+      } else {
+        ProgressView()
+      }
     }
-    .buttonStyle(CustomButtonStyle())
-    .backgroundStyle(Theme.background)
+    .onAppear {
+      if let existing = monsters.first {
+        monsterModel = existing
+      } else {
+        let newMonster = MonsterModel(happiness: 50, energy: 100)
+        context.insert(newMonster)
+        monsterModel = newMonster
+        do {
+          try context.save()  // Explicit save to ensure persistence.
+        } catch {
+          print("Failed to save new monster: \(error)")
+        }
+      }
+    }
   }
 
-  func InfoPlate() -> some View {
+  func InfoPlate(_ monster: MonsterModel) -> some View {
     // MARK: Info Container
     VStack(spacing: Theme.sm) {
 
