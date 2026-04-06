@@ -15,6 +15,8 @@ struct EnergyView: View {
                 MeatIcon(fillAmount: calcFillAmt(for: i))
             }
         }
+        .padding(Theme.md)
+        .rotationEffect(.degrees(Double.random(in: -2...2)))
     }
     
     func calcFillAmt(for meatIndex: Int) -> CGFloat {
