@@ -51,6 +51,9 @@ struct MonsterView: View {
           print("Failed to save new monster: \(error)")
         }
       }
+      Task {
+        await monsterModel?.start()
+      }
     }
   }
 
