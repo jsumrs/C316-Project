@@ -75,7 +75,7 @@ struct MonsterView: View {
       }
 
       // MARK: Experience Bar
-      ProgressView(value: 400, total: 1000)
+      ProgressView(value: Double(monster.experienceComponent.exp), total: Double(monster.experienceComponent.expCap))
         .tint(Theme.primary)
         .border(.black, width: 0.5)
         .padding(.bottom, Theme.xs)
