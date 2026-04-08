@@ -42,6 +42,7 @@ struct MonsterView: View {
       if let existing = monsters.first {
         monsterModel = existing
       } else {
+        
         let newMonster = MonsterModel(happiness: 50, energy: 100)
         context.insert(newMonster)
         monsterModel = newMonster
@@ -59,35 +60,49 @@ struct MonsterView: View {
 
   func InfoPlate(_ monster: MonsterModel) -> some View {
     // MARK: Info Container
-    VStack(spacing: Theme.sm) {
+    VStack(spacing: Theme.xs) {
 
       // MARK: Name and Level Container
-      HStack {
+      HStack (alignment: .center, spacing: Theme.sm) {
 
         Text("Trogdor the Burninator")
-          .font(Theme.indieflower.scaled(by: 0.8))
+          .font(Theme.indieflower.scaled(by: 0.75))
+          .foregroundStyle(Theme.textPrimary)
+          .lineLimit(1)
+          .minimumScaleFactor(0.6)
+          .frame(maxWidth: .infinity, alignment: .leading)
 
         // MARK: Level and Steps Container
-        VStack(alignment: .trailing) {
-          Text("Lv. 1")
-          Text("x steps to go")  // Calculate the amount of steps to go before next level up. Do the math with the multiplier.
+        VStack(alignment: .trailing, spacing: 0) {
+          Text("Lv. \(monster.experienceComponent.level)")
+            .font(Theme.indieflower.scaled(by: 0.55))
+          Text("\(monster.experienceComponent.getStepsToNextLevel()) steps to go")
+            .font(Theme.indieflower.scaled(by: 0.45))
         }
+        .frame(width: 110, alignment: .trailing)
+        .foregroundStyle(Theme.textPrimary)
       }
+      .padding(.horizontal, Theme.sm)
+      .padding(.top, Theme.xs)
 
       // MARK: Experience Bar
       ProgressView(value: Double(monster.experienceComponent.exp), total: Double(monster.experienceComponent.expCap))
         .tint(Theme.primary)
-        .border(.black, width: 0.5)
+        .padding(.horizontal, Theme.sm)
         .padding(.bottom, Theme.xs)
     }
     .background(Theme.secondary)
     .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
     .overlay(
+      RoundedRectangle(cornerRadius: Theme.cornerRadius)
+        .strokeBorder(.black.opacity(0.3), lineWidth: 0.5)
+    )
+    .overlay(
       Image("SketchBorder")
         .resizable()
     )
     .padding(.horizontal, Theme.sm)
-    .font(Theme.indieflower.scaled(by: 0.66))
+    .rotationEffect(Angle(degrees: -1))
   }
 }
 
