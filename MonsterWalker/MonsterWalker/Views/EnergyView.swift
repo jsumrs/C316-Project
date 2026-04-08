@@ -4,33 +4,43 @@ struct EnergyView: View {
     // View Specific
     private let meatSpacing: CGFloat = 4
     private let numOfMeats = 5
-    
-    // Data In
-  @Bindable var monster: MonsterModel
-    var meatEnergyWorth: CGFloat {
-      MonsterModel.maxEnergy / CGFloat(numOfMeats)
+    let energy: Double
+
+    private let rotations: [Double]
+
+    init(energy: Double) {
+        self.energy = energy
+        self.rotations = (0..<5).map { _ in Double.random(in: -2...2) }
     }
-    
+
+    // Data In
+    var meatEnergyWorth: CGFloat {
+        MonsterModel.maxEnergy / CGFloat(numOfMeats)
+    }
+
     var body: some View {
         HStack(spacing: meatSpacing) {
-            ForEach(0 ..< numOfMeats, id: \.self) { i in
-                MeatIcon(fillAmount: calcFillAmt(for: i))
+            ForEach(0..<numOfMeats, id: \.self) { i in
+                MeatIcon(
+                    fillAmount: calcFillAmt(for: i),
+                    rotation: rotations[i]
+                )
             }
         }
         .padding(Theme.md)
-        .rotationEffect(.degrees(Double.random(in: -2...2)))
+        .rotationEffect(.degrees(rotations[0]))
     }
-    
+
     func calcFillAmt(for meatIndex: Int) -> CGFloat {
-        let raw = (
-          ( monster.energy - (CGFloat(meatIndex) * meatEnergyWorth) ) / meatEnergyWorth
-        )
+        let raw =
+            ((energy - (CGFloat(meatIndex) * meatEnergyWorth)) / meatEnergyWorth)
         return raw < 0 ? 0 : raw > 1 ? 1 : raw
     }
 }
 
 struct MeatIcon: View {
     var fillAmount: Double
+    var rotation: Double
 
     var body: some View {
         Image("MeatOutline")
@@ -47,6 +57,10 @@ struct MeatIcon: View {
                         .mask(alignment: .leading) {
                             Rectangle()
                                 .frame(width: geo.size.width * fillAmount)
+                                .animation(
+                                    .easeOut(duration: 1.5),
+                                    value: fillAmount
+                                )
                         }
                 }
                 Image("MeatOutline")
@@ -54,7 +68,6 @@ struct MeatIcon: View {
                     .scaledToFit()
             }
 
-            .rotationEffect(Angle(degrees: Double.random(in: -7...7)))
+            .rotationEffect(Angle(degrees: rotation))
     }
 }
-
