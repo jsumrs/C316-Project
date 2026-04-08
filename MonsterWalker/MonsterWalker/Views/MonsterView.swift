@@ -104,6 +104,12 @@ struct MonsterView: View {
     .padding(.horizontal, Theme.sm)
     .rotationEffect(Angle(degrees: -1))
   }
+  
+  func Monster(_ expComponent: Experience) -> some View {
+    // Expects asset to be "Evo_<level>" with <level> being a 0 indexed number
+    Image("Evo_\(expComponent.evolutionIndex)")
+    
+  }
 }
 
 #Preview {
