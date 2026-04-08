@@ -10,9 +10,22 @@
 		F11EAD712F648D2B0074094F /* MonsterWalker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = MonsterWalker.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		BD8BAB4B2F86BEE50037C874 /* Exceptions for "MonsterWalker" folder in "MonsterWalker" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = F11EAD702F648D2B0074094F /* MonsterWalker */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		F11EAD732F648D2B0074094F /* MonsterWalker */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				BD8BAB4B2F86BEE50037C874 /* Exceptions for "MonsterWalker" folder in "MonsterWalker" target */,
+			);
 			path = MonsterWalker;
 			sourceTree = "<group>";
 		};
@@ -266,11 +279,12 @@
 				DEVELOPMENT_TEAM = 34JVQR55ZP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = MonsterWalker/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Your step counter is used to drive the monster simulation.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "MonsterWalker uses your step counter to interact with monsters.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MonsterWalker does not write any health data.";
+				INFOPLIST_KEY_NSSiriUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -311,11 +325,12 @@
 				DEVELOPMENT_TEAM = 34JVQR55ZP;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_FILE = "";
+				INFOPLIST_FILE = MonsterWalker/Info.plist;
 				INFOPLIST_KEY_LSApplicationCategoryType = "";
 				INFOPLIST_KEY_NSHealthClinicalHealthRecordsShareUsageDescription = "Your step counter is used to drive the monster simulation.";
 				INFOPLIST_KEY_NSHealthShareUsageDescription = "MonsterWalker uses your step counter to interact with monsters.";
 				INFOPLIST_KEY_NSHealthUpdateUsageDescription = "MonsterWalker does not write any health data.";
+				INFOPLIST_KEY_NSSiriUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
