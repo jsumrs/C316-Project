@@ -49,6 +49,10 @@ class Experience {
         setupStreakTimer()
         await checkStreakOnLaunch()
     }
+    
+    func getStepsToNextLevel() -> Int{
+        return Int(ceil(Double((expCap - exp)) / expGainScalingFactor))
+    }
 
     // MARK: - Streak Timer
 
