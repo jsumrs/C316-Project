@@ -95,8 +95,9 @@ class MonsterModel {
     // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
     func start() async {
         guard energyTimer == nil else { return }
+        // Eggs always have full energy since feeding is disabled at evolutionIndex 0
+        experienceComponent.energy = experienceComponent.evolutionIndex > 0 ? energy : 100
         experienceComponent.happiness = happiness
-        experienceComponent.energy = energy
 
         await calculateTimePassed()
         startTimers()

@@ -21,22 +21,22 @@ struct MonsterView: View {
                 VStack {
                     InfoPlate(monster)
                     MonsterSpriteView(
-                        evolutionIndex: monster.experienceComponent
-                            .evolutionIndex
                         evolutionIndex: monster.experienceComponent.evolutionIndex,
                         onTap: monster.pet
                     )
                     .padding()
-                    .onTapGesture {
-                        monster.pet()
+                    
+                    // Eggs always have full energy since feeding is disabled at evolutionIndex 0
+                    if monster.experienceComponent.evolutionIndex > 0 {
+                        EnergyView(
+                            energy: isCatchingUp ? displayedEnergy : monster.energy
+                        )
+                        Button("Feed") {
+                            monster.feed()
+                        }
+                        .buttonStyle(CustomButtonStyle())
                     }
-                    EnergyView(
-                        energy: isCatchingUp ? displayedEnergy : monster.energy
-                    )
-                    Button("Feed") {
-                        monster.feed()
-                    }
-                    .buttonStyle(CustomButtonStyle())
+                    
                     Button("Stats") { showStats = true }
                         .font(Theme.caption)
                         .foregroundStyle(Theme.textSecondary)
