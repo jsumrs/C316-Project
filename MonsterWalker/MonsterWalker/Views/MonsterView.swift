@@ -23,6 +23,8 @@ struct MonsterView: View {
                     MonsterSpriteView(
                         evolutionIndex: monster.experienceComponent
                             .evolutionIndex
+                        evolutionIndex: monster.experienceComponent.evolutionIndex,
+                        onTap: monster.pet
                     )
                     .padding()
                     .onTapGesture {
@@ -162,14 +164,17 @@ struct MonsterView: View {
 
 struct MonsterSpriteView: View {
     let evolutionIndex: Int
+    let onTap: () -> Void
 
     // Snapshot variables for evolution animation
     @State private var displayedIndex: Int
     @State private var flashOpacity: Double = 0
     @State private var scale: CGFloat = 1.0
+    @State private var isBouncing = false
 
-    init(evolutionIndex: Int) {
+    init(evolutionIndex: Int, onTap: @escaping () -> Void) {
         self.evolutionIndex = evolutionIndex
+        self.onTap = onTap
         self._displayedIndex = State(initialValue: evolutionIndex)
     }
 
@@ -179,10 +184,30 @@ struct MonsterSpriteView: View {
             .scaledToFit()
             .scaleEffect(scale)
             .overlay(Color.white.opacity(flashOpacity))
+            .onTapGesture {
+                guard !isBouncing else { return }
+                onTap()
+                bounce()
+            }
             .onChange(of: evolutionIndex) { _, newIndex in
                 guard newIndex != displayedIndex else { return }
                 evolve(to: newIndex)
             }
+    }
+    
+    private func bounce() {
+        isBouncing = true
+        withAnimation(.easeOut(duration: 0.15)) {
+            scale = 1.2
+        }
+        Task {
+            try? await Task.sleep(for: .seconds(0.15))
+            withAnimation(.spring(response: 0.3, dampingFraction: 0.4)) {
+                scale = 1.0
+            }
+            try? await Task.sleep(for: .seconds(0.4))
+            isBouncing = false
+        }
     }
 
     private func evolve(to newIndex: Int) {
