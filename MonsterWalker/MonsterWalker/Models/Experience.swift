@@ -35,7 +35,8 @@ class Experience {
         expGainScalingFactor = 1.0
         stepCount = 0
         level = 0
-        evolutionLevels = [0, 5, 20, 50, 70, 100]
+//        evolutionLevels = [0, 5, 20, 50, 70, 100]
+        evolutionLevels = [0, 1, 2, 3, 4, 5]
         evolutionIndex = 0
         newSteps = 0
         self.happiness = happiness
