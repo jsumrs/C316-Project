@@ -95,8 +95,7 @@ class MonsterModel {
     // Call this after SwiftData rehydrates the object (e.g. in .onAppear)
     func start() async {
         guard energyTimer == nil else { return }
-        // Eggs always have full energy since feeding is disabled at evolutionIndex 0
-        experienceComponent.energy = experienceComponent.evolutionIndex > 0 ? energy : 100
+        experienceComponent.energy = energy
         experienceComponent.happiness = happiness
 
         await calculateTimePassed()
@@ -119,8 +118,9 @@ class MonsterModel {
     // MARK: - Private Helpers
 
     private func syncExperience() {
-        experienceComponent.happiness = happiness
+        
         experienceComponent.energy = energy
+        experienceComponent.happiness = happiness
         experienceComponent.changeExpScalingFactor()
     }
 
@@ -162,9 +162,11 @@ class MonsterModel {
         let newSteps = await experienceComponent.stepCounter.getNewSteps()
         let energyReductionScalingFactor = 0.01
         
-        energy = max(0, energy - (energyReductionScalingFactor * newSteps))
+        energy = experienceComponent.evolutionIndex > 0
+               ? max(0, energy - (energyReductionScalingFactor * newSteps))
+               : 100 // Eggs always have full energy (feeding disabled at evolutionIndex 0)
+        
         syncExperience()
-
         experienceComponent.expGainTimerEvent(newSteps)
     }
 
