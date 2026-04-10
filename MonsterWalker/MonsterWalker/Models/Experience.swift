@@ -139,6 +139,7 @@ class Experience {
         audio.playSound(.levelUp)
         level += 1
         let expCapScalingFactor: Double = 1.15
+        exp -= expCap // carry over the remainder into the next level
         expCap = Int64(Double(expCap) * expCapScalingFactor)
 
         if evolutionIndex + 1 < evolutionLevels.count &&
