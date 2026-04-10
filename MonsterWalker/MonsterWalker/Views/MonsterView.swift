@@ -104,6 +104,15 @@ struct MonsterView: View {
     }
 
     // MARK: - Info Plate
+    
+    var evoNames: [Int: String] = [
+        0: "Egginator",
+        1: "Babynator",
+        2: "Smolinator",
+        3: "Chompinator",
+        4: "Jackedinator",
+        5: "Burninator",
+    ]
 
     func InfoPlate(_ monster: MonsterModel) -> some View {
         let exp = isCatchingUp ? displayedExp : monster.experienceComponent.exp
@@ -112,7 +121,7 @@ struct MonsterView: View {
         return VStack(spacing: Theme.xs) {
             // MARK: Name and Level Container
             HStack(alignment: .center, spacing: Theme.sm) {
-                Text("Trogdor the Burninator")
+                Text("Trogdor the \(evoNames[monster.experienceComponent.evolutionIndex] ?? "Unknown")")
                     .font(Theme.indieflower.scaled(by: 0.75))
                     .foregroundStyle(Theme.textPrimary)
                     .lineLimit(1)
