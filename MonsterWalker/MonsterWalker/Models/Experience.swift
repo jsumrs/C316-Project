@@ -26,6 +26,7 @@ class Experience {
     @Transient var streakTimer: Timer? = nil
     @Transient var happiness: Double = 0.0
     @Transient var energy: Double = 0.0
+    @Transient var audio = AudioPlayerModel()
 
     init(happiness: Double = 0.0, energy: Double = 0.0) {
         lastStreakDate = Date()
@@ -135,6 +136,7 @@ class Experience {
     // MARK: - Leveling
 
     private func levelUp() {
+        audio.playSound(.levelUp)
         level += 1
         let expCapScalingFactor: Double = 1.15
         expCap = Int64(Double(expCap) * expCapScalingFactor)
