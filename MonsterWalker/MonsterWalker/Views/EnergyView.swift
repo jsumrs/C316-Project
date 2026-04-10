@@ -10,7 +10,7 @@ struct EnergyView: View {
 
     init(energy: Double) {
         self.energy = energy
-        self.rotations = (0..<5).map { _ in Double.random(in: -2...2) }
+        self.rotations = [-2, 0, 2, -1, 1]
     }
 
     // Data In
@@ -28,7 +28,7 @@ struct EnergyView: View {
             }
         }
         .padding(Theme.md)
-        .rotationEffect(.degrees(rotations[0]))
+        .rotationEffect(Angle(degrees: -1))
     }
 
     func calcFillAmt(for meatIndex: Int) -> CGFloat {

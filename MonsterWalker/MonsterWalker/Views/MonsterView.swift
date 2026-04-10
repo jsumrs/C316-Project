@@ -186,7 +186,6 @@ struct MonsterSpriteView: View {
             .frame(width: 350, height:400)
             .overlay(Color.white.opacity(flashOpacity))
             .onTapGesture {
-                guard !isBouncing else { return }
                 onTap()
                 bounce()
             }
