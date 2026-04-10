@@ -75,13 +75,14 @@ class MonsterModel {
     var lastHappinessReduction: Date
     var energyReductionInterval: Double
     var happinessReductionInterval: Double
-
+    
     // MARK: - Relationship
     @Relationship(deleteRule: .cascade) var experienceComponent: Experience
 
     // MARK: - Transient (runtime-only)
     @Transient var energyTimer: AnyCancellable? = nil
     @Transient var happinessTimer: AnyCancellable? = nil
+    @Transient var audio = AudioPlayerModel()
 
     init(happiness: Double, energy: Double) {
         self.happiness = happiness
@@ -106,11 +107,13 @@ class MonsterModel {
     // MARK: - Public Functions
 
     public func feed(_ value: Double = 20) {
+        audio.playSound(.feed)
         energy = min(energy + value, MonsterModel.maxEnergy)
         syncExperience()
     }
 
     public func pet() {
+        audio.playSound(.pet)
         happiness = min(happiness + 25.0, MonsterModel.maxHappiness)
         syncExperience()
     }
@@ -118,7 +121,6 @@ class MonsterModel {
     // MARK: - Private Helpers
 
     private func syncExperience() {
-        
         experienceComponent.energy = energy
         experienceComponent.happiness = happiness
         experienceComponent.changeExpScalingFactor()
