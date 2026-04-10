@@ -10,19 +10,19 @@ import AVFoundation
 import Combine
 
 enum SoundEffect {
-    case pet
+    case levelUp
     case feed
-    case TROGGDOOORR
+    case pet
     
     var fileName: String {
         switch self {
-        case .pet:
+        case .levelUp:
             //petsound would be the name of the mp3
-            return "petsound"
+            return "levelUpSound"
         case .feed:
-            return "feedsound"
-        case .TROGGDOOORR:
-            return "troggdoor"
+            return "feedSound"
+        case .pet:
+            return "trogdor"
         }
     }
     
@@ -40,16 +40,14 @@ class AudioPlayerModel: ObservableObject {
     
     @Published var musicIsPlaying = false
     
-    init(){
-        if let backgroundMusicPath = Bundle.main.path(forResource: "background", ofType: "mp3"){
-            do{
-                self.musicPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: backgroundMusicPath))
-            }
-            catch{
-                
+    init() {
+        if let path = Bundle.main.path(forResource: "backgroundMusic", ofType: "mp3") {
+            do {
+                self.musicPlayer = try AVAudioPlayer(contentsOf: URL(fileURLWithPath: path))
+            } catch {
+                print("Error loading background music: \(error)")
             }
         }
-        self.soundEffectPlayer = AVAudioPlayer()
     }
     
     func playSound(_ effect: SoundEffect) {
@@ -64,5 +62,23 @@ class AudioPlayerModel: ObservableObject {
         } catch {
             print("Error playing sound: \(error)")
         }
+    }
+    
+    func startMusic() {
+        guard let player = musicPlayer else {
+            print("musicPlayer is nil")
+            return
+        }
+        player.numberOfLoops = -1
+        if !player.play() {
+            print("play() returned false")
+        }
+        musicIsPlaying = true
+    }
+
+    func stopMusic() {
+        musicPlayer?.stop()
+        musicPlayer?.currentTime = 0
+        musicIsPlaying = false
     }
 }
